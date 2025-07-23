@@ -4,7 +4,6 @@ from typing import List, Optional
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
 
 # Import models from the models package
 from models import (
@@ -142,67 +141,5 @@ async def detect_language(
 
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
-
-# Add a new request body model for text-based language detection
-class TextRequest(BaseModel):
-    text: str = Field(..., description="Text to analyze for language detection")
-
-
-@router.post(
-    "/detect-language-text",
-    response_model=DetectLanguageResponse,
-    responses={
-        400: {"model": ErrorResponse, "description": "Bad request - no text provided"},
-        500: {"model": ErrorResponse, "description": "Internal server error"},
-    },
-    summary="Detect languages in text",
-    description="Analyze provided text and detect the languages used. Returns detected languages with confidence scores.",
-    tags=["OCR Operations"],
-)
-async def detect_language_text(request: TextRequest) -> DetectLanguageResponse:
-    """
-    Detect languages in provided text.
-
-    This endpoint analyzes the provided text and identifies the languages
-    present in the content along with confidence scores and percentages.
-    """
-    try:
-        start_time = time.time()
-
-        # Use language detection service directly on text
-        detected_languages_data = LanguageDetectionService.detect_languages(
-            request.text
-        )
-
-        # Determine primary language
-        primary_language = (
-            detected_languages_data[0]["language"]
-            if detected_languages_data
-            else "Unknown"
-        )
-
-        # Convert to Pydantic models
-        detected_languages = [
-            DetectedLanguage(
-                language=lang_data["language"],
-                language_code=lang_data["language_code"],
-                confidence=lang_data["confidence"],
-                text_percentage=lang_data["text_percentage"],
-            )
-            for lang_data in detected_languages_data
-        ]
-
-        processing_time = time.time() - start_time
-
-        return DetectLanguageResponse(
-            success=True,
-            detected_languages=detected_languages,
-            primary_language=primary_language,
-            processing_time=processing_time,
-        )
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
