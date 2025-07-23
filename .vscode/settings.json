@@ -1,0 +1,31 @@
+{
+  "python.pythonPath": "/home/ak/.cache/pypoetry/virtualenvs/ocr-toolkit-5eHfDMfU-py3.13/bin/python",
+  "python.defaultInterpreterPath": "/home/ak/.cache/pypoetry/virtualenvs/ocr-toolkit-5eHfDMfU-py3.13/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.pytest_cache": true,
+    "**/node_modules": true,
+    "**/.git": false
+  },
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.pytest_cache": true,
+    "**/node_modules": true
+  },
+  "python.analysis.exclude": [
+    "**/__pycache__",
+    "**/.pytest_cache"
+  ],
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.extraPaths": [
+    "./src/backend"
+  ],
+  "files.associations": {
+    "Dockerfile*": "dockerfile"
+  },
+  "docker.showStartPage": false,
+  "extensions.ignoreRecommendations": true
+}
