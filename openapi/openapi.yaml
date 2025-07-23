@@ -123,6 +123,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /detect-language-text:
+    post:
+      tags:
+      - OCR Operations
+      summary: Detect languages in text
+      description: Analyze provided text and detect the languages used. Returns detected
+        languages with confidence scores.
+      operationId: detect_language_text_detect_language_text_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectLanguageResponse'
+        '400':
+          description: Bad request - no text provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
     Body_detect_language_detect_language_post:
@@ -255,3 +294,43 @@ components:
       - confidence_score
       - processing_time
       title: ExtractTextResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    TextRequest:
+      properties:
+        text:
+          type: string
+          title: Text
+          description: Text to analyze for language detection
+      type: object
+      required:
+      - text
+      title: TextRequest
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError

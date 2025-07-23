@@ -1,317 +1,335 @@
 import io
 import time
-from typing import List, Tuple, Optional
-from PIL import Image
+from typing import List, Optional, Tuple
+
+import fitz  # PyMuPDF for PDF processing
 import pytesseract
+from fastapi import HTTPException, UploadFile
 from langdetect import detect_langs
 from langdetect.lang_detect_exception import LangDetectException
-from fastapi import HTTPException, UploadFile
-import fitz  # PyMuPDF for PDF processing
+from PIL import Image
 
 # Language code mappings for better readability
 LANGUAGE_NAMES = {
-    'en': 'English',
-    'es': 'Spanish', 
-    'fr': 'French',
-    'de': 'German',
-    'it': 'Italian',
-    'pt': 'Portuguese',
-    'ru': 'Russian',
-    'zh': 'Chinese',
-    'ja': 'Japanese',
-    'ko': 'Korean',
-    'ar': 'Arabic',
-    'hi': 'Hindi',
-    'th': 'Thai',
-    'vi': 'Vietnamese',
-    'nl': 'Dutch',
-    'sv': 'Swedish',
-    'da': 'Danish',
-    'no': 'Norwegian',
-    'fi': 'Finnish',
-    'pl': 'Polish',
-    'cs': 'Czech',
-    'hu': 'Hungarian',
-    'ro': 'Romanian',
-    'bg': 'Bulgarian',
-    'hr': 'Croatian',
-    'sk': 'Slovak',
-    'sl': 'Slovenian',
-    'et': 'Estonian',
-    'lv': 'Latvian',
-    'lt': 'Lithuanian',
-    'mt': 'Maltese',
-    'ga': 'Irish',
-    'cy': 'Welsh'
+    "en": "English",
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German",
+    "it": "Italian",
+    "pt": "Portuguese",
+    "ru": "Russian",
+    "zh": "Chinese",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "ar": "Arabic",
+    "hi": "Hindi",
+    "th": "Thai",
+    "vi": "Vietnamese",
+    "nl": "Dutch",
+    "sv": "Swedish",
+    "da": "Danish",
+    "no": "Norwegian",
+    "fi": "Finnish",
+    "pl": "Polish",
+    "cs": "Czech",
+    "hu": "Hungarian",
+    "ro": "Romanian",
+    "bg": "Bulgarian",
+    "hr": "Croatian",
+    "sk": "Slovak",
+    "sl": "Slovenian",
+    "et": "Estonian",
+    "lv": "Latvian",
+    "lt": "Lithuanian",
+    "mt": "Maltese",
+    "ga": "Irish",
+    "cy": "Welsh",
 }
+
 
 class FileValidationService:
     """Service for file validation operations"""
-    
+
     ALLOWED_CONTENT_TYPES = [
-        "image/jpeg", 
+        "image/jpeg",
         "image/jpg",
-        "image/png", 
-        "image/webp", 
-        "application/pdf"
+        "image/png",
+        "image/webp",
+        "application/pdf",
     ]
-    
+
     MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
-    
+
     @staticmethod
     async def validate_file(file: UploadFile) -> bytes:
         """
         Validate uploaded file format and size.
-        
+
         Args:
             file: The uploaded file to validate
-            
+
         Returns:
             bytes: The file content as bytes
-            
+
         Raises:
             HTTPException: If file is invalid or too large
         """
         if not file:
-            raise HTTPException(
-                status_code=400,
-                detail="No file provided"
-            )
-        
+            raise HTTPException(status_code=400, detail="No file provided")
+
         # Check file type
         if file.content_type not in FileValidationService.ALLOWED_CONTENT_TYPES:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid file format. Only JPEG, PNG, WEBP, and PDF files are supported. Got: {file.content_type}"
+                detail=f"Invalid file format. Only JPEG, PNG, WEBP, and PDF files are supported. Got: {file.content_type}",
             )
-        
+
         # Read and check file size
         file_content = await file.read()
         if len(file_content) > FileValidationService.MAX_FILE_SIZE:
             raise HTTPException(
-                status_code=413,
-                detail="File too large. Maximum size is 10MB"
+                status_code=413, detail="File too large. Maximum size is 10MB"
             )
-        
+
         return file_content
+
 
 class OCRService:
     """Service for OCR text extraction operations"""
-    
+
     @staticmethod
     def extract_text_from_image(image_bytes: bytes, filename: str) -> Tuple[str, float]:
         """
         Extract text from image using Tesseract OCR.
-        
+
         Args:
             image_bytes: Image data as bytes
             filename: Original filename for error reporting
-            
+
         Returns:
             Tuple[str, float]: Extracted text and confidence score
-            
+
         Raises:
             HTTPException: If OCR processing fails
         """
         try:
             # Open image with PIL
             image = Image.open(io.BytesIO(image_bytes))
-            
+
             # Convert to RGB if necessary (for WEBP and other formats)
-            if image.mode != 'RGB':
-                image = image.convert('RGB')
-            
+            if image.mode != "RGB":
+                image = image.convert("RGB")  # type: ignore
+
             # Extract text using Tesseract with confidence data
-            ocr_data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
-            
+            ocr_data = pytesseract.image_to_data(
+                image, output_type=pytesseract.Output.DICT
+            )
+
             # Get text and calculate average confidence
             text_parts = []
             confidences = []
-            
-            for i, conf in enumerate(ocr_data['conf']):
+
+            for i, conf in enumerate(ocr_data["conf"]):
                 if int(conf) > 0:  # Only include text with confidence > 0
-                    text = ocr_data['text'][i].strip()
+                    text = ocr_data["text"][i].strip()
                     if text:
                         text_parts.append(text)
                         confidences.append(int(conf))
-            
-            extracted_text = ' '.join(text_parts)
+
+            extracted_text = " ".join(text_parts)
             avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
-            
+
             # Convert confidence from 0-100 to 0-1 scale
             confidence_score = avg_confidence / 100.0
-            
+
             return extracted_text, confidence_score
-            
+
         except Exception as e:
             raise HTTPException(
-                status_code=422,
-                detail=f"Failed to process image {filename}: {str(e)}"
+                status_code=422, detail=f"Failed to process image {filename}: {str(e)}"
             )
-    
+
     @staticmethod
     def extract_text_from_pdf(pdf_bytes: bytes, filename: str) -> Tuple[str, float]:
         """
         Extract text from PDF using PyMuPDF and OCR for images.
-        
+
         Args:
             pdf_bytes: PDF data as bytes
             filename: Original filename for error reporting
-            
+
         Returns:
             Tuple[str, float]: Extracted text and confidence score
-            
+
         Raises:
             HTTPException: If PDF processing fails
         """
         try:
             # Open PDF document
             pdf_document = fitz.open(stream=pdf_bytes, filetype="pdf")
-            
+
             all_text = []
             all_confidences = []
-            
+
             for page_num in range(pdf_document.page_count):
                 page = pdf_document[page_num]
-                
+
                 # First try to extract text directly (for text-based PDFs)
                 page_text = page.get_text().strip()
-                
+
                 if page_text:
                     # If we have extractable text, use it with high confidence
                     all_text.append(page_text)
-                    all_confidences.append(0.95)  # High confidence for direct text extraction
+                    all_confidences.append(
+                        0.95
+                    )  # High confidence for direct text extraction
                 else:
                     # If no text, try OCR on the page image
                     pix = page.get_pixmap()
                     img_data = pix.tobytes("png")
-                    
+
                     # Use OCR service for the page image
                     ocr_text, ocr_confidence = OCRService.extract_text_from_image(
                         img_data, f"{filename}_page_{page_num + 1}"
                     )
-                    
+
                     if ocr_text.strip():
                         all_text.append(ocr_text)
                         all_confidences.append(ocr_confidence)
-            
+
             pdf_document.close()
-            
+
             # Combine all text and calculate average confidence
-            combined_text = '\n'.join(all_text)
-            avg_confidence = sum(all_confidences) / len(all_confidences) if all_confidences else 0.0
-            
+            combined_text = "\n".join(all_text)
+            avg_confidence = (
+                sum(all_confidences) / len(all_confidences) if all_confidences else 0.0
+            )
+
             return combined_text, avg_confidence
-            
+
         except Exception as e:
             raise HTTPException(
-                status_code=422,
-                detail=f"Failed to process PDF {filename}: {str(e)}"
+                status_code=422, detail=f"Failed to process PDF {filename}: {str(e)}"
             )
-    
+
     @staticmethod
     async def extract_text(file: UploadFile) -> Tuple[str, float, float]:
         """
         Main entry point for text extraction from any supported file type.
-        
+
         Args:
             file: The uploaded file to process
-            
+
         Returns:
             Tuple[str, float, float]: Extracted text, confidence score, and processing time
         """
         start_time = time.time()
-        
+
         # Validate file
         file_content = await FileValidationService.validate_file(file)
-        
+
         # Process based on content type
         if file.content_type == "application/pdf":
-            text, confidence = OCRService.extract_text_from_pdf(file_content, file.filename)
+            text, confidence = OCRService.extract_text_from_pdf(
+                file_content, file.filename
+            )
         else:
             # Handle all image types
-            text, confidence = OCRService.extract_text_from_image(file_content, file.filename)
-        
+            text, confidence = OCRService.extract_text_from_image(
+                file_content, file.filename
+            )
+
         processing_time = time.time() - start_time
-        
+
         if not text.strip():
             # If no text was extracted, return a meaningful message
             text = f"No readable text found in {file.filename}. The image may be too blurry, have poor quality, or contain no text."
             confidence = 0.0
-        
+
         return text, confidence, processing_time
+
 
 class LanguageDetectionService:
     """Service for language detection operations"""
-    
+
     @staticmethod
     def detect_languages(text: str) -> List[dict]:
         """
         Detect languages in the given text.
-        
+
         Args:
             text: Text to analyze for language detection
-            
+
         Returns:
             List[dict]: List of detected languages with confidence scores
         """
         if not text.strip():
             return []
-        
+
         try:
             # Use langdetect to identify languages
             detected_langs = detect_langs(text)
-            
+
             languages = []
             total_confidence = sum(lang.prob for lang in detected_langs)
-            
+
             for lang in detected_langs:
                 language_name = LANGUAGE_NAMES.get(lang.lang, f"Unknown ({lang.lang})")
-                text_percentage = (lang.prob / total_confidence) * 100 if total_confidence > 0 else 0
-                
-                languages.append({
-                    "language": language_name,
-                    "language_code": lang.lang,
-                    "confidence": lang.prob,
-                    "text_percentage": text_percentage
-                })
-            
+                text_percentage = (
+                    (lang.prob / total_confidence) * 100 if total_confidence > 0 else 0
+                )
+
+                languages.append(
+                    {
+                        "language": language_name,
+                        "language_code": lang.lang,
+                        "confidence": lang.prob,
+                        "text_percentage": text_percentage,
+                    }
+                )
+
             # Sort by confidence (highest first)
             languages.sort(key=lambda x: x["confidence"], reverse=True)
-            
+
             return languages
-            
+
         except LangDetectException:
             # If language detection fails, assume English as fallback
-            return [{
-                "language": "English",
-                "language_code": "en", 
-                "confidence": 0.5,
-                "text_percentage": 100.0
-            }]
-    
+            return [
+                {
+                    "language": "English",
+                    "language_code": "en",
+                    "confidence": 0.5,
+                    "text_percentage": 100.0,
+                }
+            ]
+
     @staticmethod
-    async def detect_language_in_file(file: UploadFile) -> Tuple[List[dict], str, float]:
+    async def detect_language_in_file(
+        file: UploadFile,
+    ) -> Tuple[List[dict], str, float]:
         """
         Detect languages in an uploaded file by first extracting text via OCR.
-        
+
         Args:
             file: The uploaded file to process
-            
+
         Returns:
             Tuple[List[dict], str, float]: Detected languages, primary language, and processing time
         """
         start_time = time.time()
-        
+
         # First extract text from the file
         extracted_text, _, _ = await OCRService.extract_text(file)
-        
+
         # Then detect languages in the extracted text
         detected_languages = LanguageDetectionService.detect_languages(extracted_text)
-        
+
         # Determine primary language
-        primary_language = detected_languages[0]["language"] if detected_languages else "Unknown"
-        
+        primary_language = (
+            detected_languages[0]["language"] if detected_languages else "Unknown"
+        )
+
         processing_time = time.time() - start_time
-        
+
         return detected_languages, primary_language, processing_time

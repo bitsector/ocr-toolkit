@@ -391,6 +391,34 @@ This provides a user-friendly interface for testing all endpoints without writin
 - **Production dependencies** (fastapi, uvicorn, python-multipart, pyyaml)
 - **Custom scripts** for common development tasks
 
----
+## CI/CD Pipeline
 
-*Professional OCR API with auto-generated documentation*
+This project includes a comprehensive GitHub Actions CI/CD pipeline that runs:
+
+- **Linting**: Black (formatting) and isort (import sorting) 
+- **Static Analysis**: mypy (type checking)
+- **Security**: Bandit (vulnerability scanning)
+- **Testing**: pytest with API tests
+- **Documentation**: OpenAPI generation validation
+
+See [CI-CD.md](CI-CD.md) for detailed pipeline documentation.
+
+### Development Tools
+
+Run the same checks locally before committing:
+
+```bash
+cd src/backend
+
+# Auto-format code
+poetry run black .
+poetry run isort . --profile black
+
+# Run all CI checks
+poetry run black --check --diff .
+poetry run isort --check-only --diff . --profile black
+poetry run mypy . --config-file mypy.ini  
+poetry run bandit -r . -c .bandit -ll
+poetry run pytest -v
+poetry run python generate_openapi.py --no-server
+```
