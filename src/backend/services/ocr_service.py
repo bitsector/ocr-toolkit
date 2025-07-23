@@ -77,11 +77,25 @@ class FileValidationService:
         if not file:
             raise HTTPException(status_code=400, detail="No file provided")
 
+        # If content_type is not set or is generic, try to determine from filename
+        content_type = file.content_type
+        if content_type in [None, "application/octet-stream"] and file.filename:
+            import os
+            ext = os.path.splitext(file.filename)[1].lower()
+            content_type_map = {
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg', 
+                '.png': 'image/png',
+                '.webp': 'image/webp',
+                '.pdf': 'application/pdf'
+            }
+            content_type = content_type_map.get(ext)
+
         # Check file type
-        if file.content_type not in FileValidationService.ALLOWED_CONTENT_TYPES:
+        if content_type not in FileValidationService.ALLOWED_CONTENT_TYPES:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid file format. Only JPEG, PNG, WEBP, and PDF files are supported. Got: {file.content_type}",
+                detail=f"Invalid file format. Only JPEG, PNG, WEBP, and PDF files are supported. Got: {content_type}",
             )
 
         # Read and check file size
@@ -120,27 +134,43 @@ class OCRService:
             if image.mode != "RGB":
                 image = image.convert("RGB")  # type: ignore
 
-            # Extract text using Tesseract with confidence data
-            ocr_data = pytesseract.image_to_data(
-                image, output_type=pytesseract.Output.DICT
-            )
+            # Extract text using Tesseract - try simple approach first
+            print(f"DEBUG: Processing image {filename} with size {image.size}")
+            
+            # Method 1: Simple string extraction (like Tesseract.js)
+            extracted_text = pytesseract.image_to_string(image, lang='eng').strip()
+            print(f"DEBUG: Simple extraction result: '{extracted_text}'")
+            
+            if extracted_text:
+                confidence_score = 0.85  # Default confidence for simple extraction
+            else:
+                # Method 2: Try with detailed data if simple method fails
+                print("DEBUG: Simple method failed, trying detailed OCR data...")
+                ocr_data = pytesseract.image_to_data(
+                    image, output_type=pytesseract.Output.DICT
+                )
+                print(f"DEBUG: OCR data keys: {list(ocr_data.keys())}")
+                print(f"DEBUG: Number of detected elements: {len(ocr_data.get('text', []))}")
 
-            # Get text and calculate average confidence
-            text_parts = []
-            confidences = []
+                # Get text and calculate average confidence
+                text_parts = []
+                confidences = []
 
-            for i, conf in enumerate(ocr_data["conf"]):
-                if int(conf) > 0:  # Only include text with confidence > 0
-                    text = ocr_data["text"][i].strip()
-                    if text:
-                        text_parts.append(text)
-                        confidences.append(int(conf))
+                for i, conf in enumerate(ocr_data["conf"]):
+                    if int(conf) > 0:  # Only include text with confidence > 0
+                        text = ocr_data["text"][i].strip()
+                        if text:
+                            text_parts.append(text)
+                            confidences.append(int(conf))
+                            print(f"DEBUG: Found text part: '{text}' (conf: {conf})")
 
-            extracted_text = " ".join(text_parts)
-            avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
-
-            # Convert confidence from 0-100 to 0-1 scale
-            confidence_score = avg_confidence / 100.0
+                extracted_text = " ".join(text_parts)
+                avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
+                confidence_score = avg_confidence / 100.0
+                
+                print(f"DEBUG: Detailed extraction result: '{extracted_text}' (confidence: {confidence_score})")
+            
+            print(f"DEBUG: Final result for {filename}: '{extracted_text}'")
 
             return extracted_text, confidence_score
 
@@ -228,8 +258,22 @@ class OCRService:
         # Validate file
         file_content = await FileValidationService.validate_file(file)
 
+        # Determine content type for processing (similar logic as in validation)
+        content_type = file.content_type
+        if content_type in [None, "application/octet-stream"] and file.filename:
+            import os
+            ext = os.path.splitext(file.filename)[1].lower()
+            content_type_map = {
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg', 
+                '.png': 'image/png',
+                '.webp': 'image/webp',
+                '.pdf': 'application/pdf'
+            }
+            content_type = content_type_map.get(ext, content_type)
+
         # Process based on content type
-        if file.content_type == "application/pdf":
+        if content_type == "application/pdf":
             text, confidence = OCRService.extract_text_from_pdf(
                 file_content, file.filename
             )
