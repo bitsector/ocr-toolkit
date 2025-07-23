@@ -5,8 +5,9 @@ Tests the full OCR pipeline with real sample files against a running server.
 
 import os
 import time
-import requests
+
 import pytest
+import requests
 
 # Configuration
 SAMPLE_DIR = os.path.abspath(
