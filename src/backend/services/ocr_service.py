@@ -8,6 +8,7 @@ from fastapi import HTTPException, UploadFile
 from langdetect import detect_langs
 from langdetect.lang_detect_exception import LangDetectException
 from PIL import Image
+from PIL.Image import Image as PILImage
 
 # Language code mappings for better readability
 LANGUAGE_NAMES = {
@@ -130,7 +131,7 @@ class OCRService:
         """
         try:
             # Open image with PIL
-            image = Image.open(io.BytesIO(image_bytes))
+            image: PILImage = Image.open(io.BytesIO(image_bytes))
             print(
                 f"DEBUG: Processing image {filename} with size {image.size}, mode: {image.mode}"
             )
