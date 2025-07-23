@@ -7,6 +7,9 @@ from datetime import datetime
 # Import models from the models package
 from models import ExtractTextResponse, DetectedLanguage, DetectLanguageResponse, ErrorResponse
 
+# Import services
+from services import OCRService, LanguageDetectionService
+
 # Create API router
 router = APIRouter()
 
@@ -42,40 +45,14 @@ async def extract_text(
     This endpoint processes the uploaded file and returns the extracted text along with
     confidence scores and processing time metrics.
     """
-    start_time = time.time()
-    
     try:
-        # Validate file
-        if not file:
-            raise HTTPException(
-                status_code=400,
-                detail="No file provided"
-            )
-        
-        # Check file type
-        allowed_types = ["image/jpeg", "image/png", "image/webp", "application/pdf"]
-        if file.content_type not in allowed_types:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid file format. Only JPEG, PNG, WEBP, and PDF files are supported. Got: {file.content_type}"
-            )
-        
-        # Check file size (10MB limit)
-        file_content = await file.read()
-        if len(file_content) > 10 * 1024 * 1024:  # 10MB
-            raise HTTPException(
-                status_code=413,
-                detail="File too large. Maximum size is 10MB"
-            )
-        
-        # TODO: Implement actual OCR logic here
-        # For now, return placeholder data
-        processing_time = time.time() - start_time
+        # Use OCR service to extract text
+        extracted_text, confidence_score, processing_time = await OCRService.extract_text(file)
         
         return ExtractTextResponse(
             success=True,
-            extracted_text=f"This is placeholder extracted text from file: {file.filename}. Implement OCR logic here.",
-            confidence_score=0.95,
+            extracted_text=extracted_text,
+            confidence_score=confidence_score,
             processing_time=processing_time
         )
         
@@ -109,55 +86,25 @@ async def detect_language(
     This endpoint processes the uploaded file, extracts text, and identifies the languages
     present in the content along with confidence scores and percentages.
     """
-    start_time = time.time()
-    
     try:
-        # Validate file
-        if not file:
-            raise HTTPException(
-                status_code=400,
-                detail="No file provided"
-            )
+        # Use language detection service
+        detected_languages_data, primary_language, processing_time = await LanguageDetectionService.detect_language_in_file(file)
         
-        # Check file type
-        allowed_types = ["image/jpeg", "image/png", "image/webp", "application/pdf"]
-        if file.content_type not in allowed_types:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid file format. Only JPEG, PNG, WEBP, and PDF files are supported. Got: {file.content_type}"
-            )
-        
-        # Check file size (10MB limit)
-        file_content = await file.read()
-        if len(file_content) > 10 * 1024 * 1024:  # 10MB
-            raise HTTPException(
-                status_code=413,
-                detail="File too large. Maximum size is 10MB"
-            )
-        
-        # TODO: Implement actual language detection logic here
-        # For now, return placeholder data
-        processing_time = time.time() - start_time
-        
+        # Convert to Pydantic models
         detected_languages = [
             DetectedLanguage(
-                language="English",
-                language_code="en",
-                confidence=0.98,
-                text_percentage=85.5
-            ),
-            DetectedLanguage(
-                language="Spanish", 
-                language_code="es",
-                confidence=0.76,
-                text_percentage=14.5
+                language=lang_data["language"],
+                language_code=lang_data["language_code"],
+                confidence=lang_data["confidence"],
+                text_percentage=lang_data["text_percentage"]
             )
+            for lang_data in detected_languages_data
         ]
         
         return DetectLanguageResponse(
             success=True,
             detected_languages=detected_languages,
-            primary_language="English",
+            primary_language=primary_language,
             processing_time=processing_time
         )
         

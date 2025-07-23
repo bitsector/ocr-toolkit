@@ -13,7 +13,8 @@ ocr-toolkit/
 │   ├── models/          # Data models and schemas
 │   │   └── __init__.py  # Pydantic models for request/response
 │   ├── services/        # Business logic layer
-│   │   └── __init__.py  # Service implementations (empty for now)
+│   │   ├── __init__.py  # Service exports
+│   │   └── ocr_service.py # OCR and language detection services
 │   ├── db/              # Database layer
 │   │   └── __init__.py  # Database models and connections (empty for now)
 │   ├── cache/           # Caching layer
@@ -33,8 +34,31 @@ ocr-toolkit/
 ## Quick Start
 
 ### Prerequisites
+
 - Python 3.10 or higher
 - Poetry (recommended) or pip
+- **Tesseract OCR** - Required for text extraction functionality
+
+### Installing Tesseract OCR
+
+#### Ubuntu/Debian:
+```bash
+sudo apt-get update
+sudo apt-get install tesseract-ocr tesseract-ocr-eng
+```
+
+#### macOS (with Homebrew):
+```bash
+brew install tesseract
+```
+
+#### Windows:
+Download and install from: https://github.com/UB-Mannheim/tesseract/wiki
+
+### Verify Tesseract Installation:
+```bash
+tesseract --version
+```
 
 ### Using Poetry (Recommended)
 
@@ -173,6 +197,8 @@ To complete the implementation, you would typically:
    ```bash
    poetry run -C src/backend uvicorn fast_api_server:app --reload --host 0.0.0.0 --port 8000
    ```
+
+   **Note**: If you get Tesseract-related errors, make sure Tesseract OCR is installed on your system (see Prerequisites section).
 
 3. **Health Check with cURL:**
    ```bash
@@ -334,9 +360,12 @@ This provides a user-friendly interface for testing all endpoints without writin
 - **Pydantic models** - Request/response validation and documentation
 - **Type definitions** - Structured data schemas for API contracts
 
-### Business Logic (`src/backend/services/`)
-- **Service layer** - Business logic implementation (empty for now)
-- **OCR processing** - Future home for OCR service implementations
+### Business Logic (`src/backend/services/ocr_service.py`)
+- **OCR Service** - Tesseract-based text extraction from images and PDFs
+- **Language Detection Service** - Multi-language detection using langdetect
+- **File Validation Service** - File type and size validation
+- **Image Processing** - PIL-based image preprocessing for better OCR results
+- **PDF Processing** - PyMuPDF integration for PDF text extraction and OCR
 
 ### Database Layer (`src/backend/db/`)
 - **Database models** - Data persistence layer (empty for now)
