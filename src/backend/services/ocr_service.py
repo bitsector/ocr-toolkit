@@ -115,6 +115,7 @@ class OCRService:
     def extract_text_from_image(image_bytes: bytes, filename: str) -> Tuple[str, float]:
         """
         Extract text from image using Tesseract OCR.
+        Simple approach matching Tesseract.js implementation.
 
         Args:
             image_bytes: Image data as bytes
@@ -129,52 +130,25 @@ class OCRService:
         try:
             # Open image with PIL
             image = Image.open(io.BytesIO(image_bytes))
+            print(f"DEBUG: Processing image {filename} with size {image.size}, mode: {image.mode}")
 
             # Convert to RGB if necessary (for WEBP and other formats)
             if image.mode != "RGB":
-                image = image.convert("RGB")  # type: ignore
+                image = image.convert("RGB")
+                print(f"DEBUG: Converted image to RGB mode")
 
-            # Extract text using Tesseract - try simple approach first
-            print(f"DEBUG: Processing image {filename} with size {image.size}")
+            # Simple OCR extraction - matching Tesseract.js approach
+            # Use default Tesseract settings, no custom PSM or OEM
+            extracted_text = pytesseract.image_to_string(image).strip()
+            print(f"DEBUG: OCR result for {filename}: '{extracted_text}'")
             
-            # Method 1: Simple string extraction (like Tesseract.js)
-            extracted_text = pytesseract.image_to_string(image, lang='eng').strip()
-            print(f"DEBUG: Simple extraction result: '{extracted_text}'")
+            # Set confidence based on whether text was found
+            confidence_score = 0.85 if extracted_text else 0.0
             
-            if extracted_text:
-                confidence_score = 0.85  # Default confidence for simple extraction
-            else:
-                # Method 2: Try with detailed data if simple method fails
-                print("DEBUG: Simple method failed, trying detailed OCR data...")
-                ocr_data = pytesseract.image_to_data(
-                    image, output_type=pytesseract.Output.DICT
-                )
-                print(f"DEBUG: OCR data keys: {list(ocr_data.keys())}")
-                print(f"DEBUG: Number of detected elements: {len(ocr_data.get('text', []))}")
-
-                # Get text and calculate average confidence
-                text_parts = []
-                confidences = []
-
-                for i, conf in enumerate(ocr_data["conf"]):
-                    if int(conf) > 0:  # Only include text with confidence > 0
-                        text = ocr_data["text"][i].strip()
-                        if text:
-                            text_parts.append(text)
-                            confidences.append(int(conf))
-                            print(f"DEBUG: Found text part: '{text}' (conf: {conf})")
-
-                extracted_text = " ".join(text_parts)
-                avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
-                confidence_score = avg_confidence / 100.0
-                
-                print(f"DEBUG: Detailed extraction result: '{extracted_text}' (confidence: {confidence_score})")
-            
-            print(f"DEBUG: Final result for {filename}: '{extracted_text}'")
-
             return extracted_text, confidence_score
 
         except Exception as e:
+            print(f"DEBUG: OCR failed for {filename}: {str(e)}")
             raise HTTPException(
                 status_code=422, detail=f"Failed to process image {filename}: {str(e)}"
             )
