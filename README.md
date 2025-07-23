@@ -1,29 +1,52 @@
-# A FastAPI-based backend for optical character recognition (OCR) operations.
+# OCR Toolkit API
+
+A professional FastAPI-based backend for optical character recognition (OCR) operations with automatic OpenAPI documentation generation.
+
+## Project Structure
+
+```
+ocr-toolkit/
+├── src/backend/          # All source code and Poetry configuration
+│   ├── main.py          # FastAPI application with endpoints
+│   ├── generate_openapi.py  # Script to auto-generate OpenAPI docs
+│   ├── pyproject.toml   # Poetry configuration and dependencies
+│   └── poetry.lock      # Locked dependency versions
+├── openapi/             # Generated OpenAPI documentation
+│   ├── openapi.json     # OpenAPI spec in JSON format
+│   └── openapi.yaml     # OpenAPI spec in YAML format
+├── sample_files/        # Sample images for testing
+└── README.md           # This file
+```
 
 ## Quick Start
 
+### Prerequisites
+- Python 3.10 or higher
+- Poetry (recommended) or pip
+
 ### Using Poetry (Recommended)
 
-1. **Install dependencies:**
+1. **Navigate to the backend directory:**
+   ```bash
+   cd src/backend
+   ```
+
+2. **Install dependencies:**
    ```bash
    poetry install
    ```
 
-2. **Generate OpenAPI documentation:**
-   ```bash
-   ./generate_openapi.sh
-   ```
-   Or manually:
+3. **Generate OpenAPI documentation:**
    ```bash
    poetry run python generate_openapi.py
    ```
 
-3. **Start the development server:**
+4. **Start the development server:**
    ```bash
-   poetry run start
+   poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```
 
-4. **View the API documentation:**
+5. **View the API documentation:**
    - **Swagger UI**: http://localhost:8000/docs
    - **ReDoc**: http://localhost:8000/redoc
 
@@ -32,19 +55,15 @@
 This project follows the **API-first development** approach:
 1. **Develop FastAPI endpoints** with proper type annotations
 2. **Auto-generate OpenAPI documentation** from the FastAPI code
-3. **Use the generated docs** for testing and frontend development API
-
-A FastAPI-based backend for optical character recognition (OCR) operations.
+3. **Use the generated docs** for testing and frontend development
 
 ## Generated Files
 
-This project was generated from an OpenAPI specification and includes:
+The project automatically generates OpenAPI documentation in the `openapi/` directory:
 
-- `openapi.yaml` - The OpenAPI 3.0 specification defining the API endpoints
-- `main.py` - FastAPI application with endpoint definitions
-- `models.py` - Pydantic models for request/response validation
-- `requirements.txt` - Python dependencies
-- `start_server.sh` - Script to start the development server
+- `openapi/openapi.yaml` - The OpenAPI 3.0 specification in YAML format
+- `openapi/openapi.json` - The OpenAPI 3.0 specification in JSON format
+- These files are auto-generated from the FastAPI application code
 
 ## API Endpoints
 
@@ -58,29 +77,65 @@ This project was generated from an OpenAPI specification and includes:
 - Accepts a file upload (JPEG, PNG, WEBP, PDF)
 - Returns detected languages with confidence scores
 
-## Installation
+## Installation & Setup
 
-1. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+### Option 1: Using Poetry (Recommended)
 
-2. Start the development server:
-```bash
-./start_server.sh
-```
+1. **Navigate to the backend directory:**
+   ```bash
+   cd src/backend
+   ```
 
-Or manually:
-```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
+2. **Install dependencies:**
+   ```bash
+   poetry install
+   ```
+
+3. **Start the development server:**
+   ```bash
+   poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+### Option 2: Using pip
+
+1. **Navigate to the backend directory:**
+   ```bash
+   cd src/backend
+   ```
+
+2. **Create a virtual environment:**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install fastapi uvicorn[standard] python-multipart pyyaml
+   ```
+
+4. **Start the development server:**
+   ```bash
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
 
 ## Usage
 
-Once the server is running, you can:
+Once the server is running (from either option above), you can:
 
-1. Access the API documentation at: http://localhost:8000/docs
-2. View the OpenAPI spec at: http://localhost:8000/openapi.json
+1. **Access the interactive API documentation:**
+   - **Swagger UI**: http://localhost:8000/docs
+   - **ReDoc**: http://localhost:8000/redoc
+
+2. **View the raw OpenAPI specification:**
+   - **JSON format**: http://localhost:8000/openapi.json
+
+3. **Generate static OpenAPI files:**
+   ```bash
+   # From src/backend/ directory
+   poetry run python generate_openapi.py
+   ```
+   This creates `openapi/openapi.json` and `openapi/openapi.yaml` files.
 
 ## Implementation Notes
 
@@ -97,16 +152,22 @@ To complete the implementation, you would typically:
 
 ### Running the Server Locally
 
-1. **Start the development server:**
+1. **Generate OpenAPI Schemas (non-blocking):**
    ```bash
-   # Using Poetry (recommended)
-   poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000
-   
-   # Or using the Poetry script
-   poetry run start
+   poetry run -C src/backend python generate_openapi.py --no-server
    ```
 
-2. **Verify the server is running:**
+2. **Run the Backend Server:**
+   ```bash
+   poetry run -C src/backend uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+3. **Health Check with cURL:**
+   ```bash
+   curl -X GET "http://localhost:8000/health" -H "accept: application/json"
+   ```
+
+4. **Verify the server is running:**
    The server will start on `http://localhost:8000` and you should see output like:
    ```
    INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
@@ -116,13 +177,13 @@ To complete the implementation, you would typically:
    INFO:     Application startup complete.
    ```
 
-3. **Access the interactive documentation:**
+5. **Access the interactive documentation:**
    - **Swagger UI**: http://localhost:8000/docs
    - **ReDoc**: http://localhost:8000/redoc
 
 ### Testing with cURL Commands
 
-Once the server is running, you can test the endpoints using these curl commands:
+Once the server is running, you can test the endpoints using these curl commands. **Note:** All curl commands should be run from the project root directory to access the `sample_files/` folder.
 
 #### 1. Health Check
 ```bash
@@ -232,14 +293,39 @@ The project includes several sample images in the `sample_files/` directory:
 
 For easier testing, you can also use the interactive Swagger UI:
 
-1. Start the server: `poetry run uvicorn main:app --reload`
-2. Open your browser to: http://localhost:8000/docs
-3. Click on any endpoint to expand it
-4. Click "Try it out"
-5. Upload a file and click "Execute"
+1. **Start the server from the backend directory:**
+   ```bash
+   cd src/backend
+   poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
+2. **Open your browser to:** http://localhost:8000/docs
+3. **Click on any endpoint to expand it**
+4. **Click "Try it out"**
+5. **Upload a file and click "Execute"**
 
 This provides a user-friendly interface for testing all endpoints without writing curl commands.
 
+## Project Architecture
+
+### FastAPI Application (`src/backend/main.py`)
+- **Health check endpoint** (`/health`) - Service status monitoring
+- **Root endpoint** (`/`) - Basic API information
+- **Text extraction** (`/extract-text`) - OCR text extraction from images
+- **Language detection** (`/detect-language`) - Multi-language detection in images
+- **Automatic OpenAPI schema generation** with proper type annotations
+
+### OpenAPI Documentation Generation (`src/backend/generate_openapi.py`)
+- **Auto-generates** `openapi/openapi.json` and `openapi/openapi.yaml`
+- **Extracts schema** directly from FastAPI application code
+- **Maintains consistency** between implementation and documentation
+- **Poetry script integration** via `generate-docs` command
+
+### Dependency Management (`src/backend/pyproject.toml`)
+- **Poetry-based** package and dependency management
+- **Development dependencies** (black, isort, pytest, httpx)
+- **Production dependencies** (fastapi, uvicorn, python-multipart, pyyaml)
+- **Custom scripts** for common development tasks
+
 ---
 
-*Cutting edge of OCR capabilities API*
+*Professional OCR API with auto-generated documentation*

@@ -13,6 +13,9 @@ from pathlib import Path
 def main():
     """Generate OpenAPI documentation in JSON and YAML formats"""
     
+    # Check if --no-server flag is passed
+    start_server = "--no-server" not in sys.argv
+    
     print("📚 OpenAPI Documentation Generator")
     print("==================================")
     
@@ -30,14 +33,18 @@ def main():
         print("🔄 Extracting OpenAPI schema from FastAPI application...")
         openapi_schema = app.openapi()
         
+        # Create openapi directory if it doesn't exist
+        openapi_dir = Path("../../openapi")
+        openapi_dir.mkdir(parents=True, exist_ok=True)
+        
         # Generate JSON file
-        json_file = Path("openapi.json")
+        json_file = openapi_dir / "openapi.json"
         print(f"📄 Generating {json_file}...")
         with open(json_file, 'w', encoding='utf-8') as f:
             json.dump(openapi_schema, f, indent=2, default=str, ensure_ascii=False)
         
         # Generate YAML file
-        yaml_file = Path("openapi.yaml")
+        yaml_file = openapi_dir / "openapi.yaml"
         print(f"📄 Generating {yaml_file}...")
         with open(yaml_file, 'w', encoding='utf-8') as f:
             yaml.dump(openapi_schema, f, default_flow_style=False, sort_keys=False, indent=2, allow_unicode=True)
@@ -49,7 +56,7 @@ def main():
         print(f"  📄 {yaml_file} - OpenAPI specification in YAML format")
         print("")
         print("To view the documentation:")
-        print("  1. Start the server: poetry run start")
+        print("  1. Start the server: poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000")
         print("  2. Visit: http://localhost:8000/docs (Swagger UI)")
         print("  3. Visit: http://localhost:8000/redoc (ReDoc)")
         print("  4. API JSON: http://localhost:8000/openapi.json")
@@ -62,15 +69,20 @@ def main():
         print(f"  📊 Endpoints: {len(openapi_schema.get('paths', {}))}")
         print(f"  📊 Models: {len(openapi_schema.get('components', {}).get('schemas', {}))}")
         
-        # Ask if user wants to start the server
-        try:
-            choice = input("\nWould you like to start the FastAPI server now? (y/N): ").lower().strip()
-            if choice in ['y', 'yes']:
-                print("🚀 Starting FastAPI server...")
+        # Conditionally start the server
+        if start_server:
+            print("\n🚀 Starting FastAPI server automatically...")
+            try:
                 import subprocess
                 subprocess.run([sys.executable, "-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"])
-        except KeyboardInterrupt:
-            print("\n👋 Goodbye!")
+            except KeyboardInterrupt:
+                print("\n👋 Server stopped. Goodbye!")
+            except Exception as e:
+                print(f"\n❌ Error starting server: {e}")
+        else:
+            print("\n✨ OpenAPI documentation generated successfully!")
+            print("💡 Tip: Start the server manually with:")
+            print("   poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000")
         
         return True
         

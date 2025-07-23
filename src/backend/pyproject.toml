@@ -23,6 +23,7 @@ httpx = "^0.25.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.scripts]
-start = "uvicorn main:app --reload --host 0.0.0.0 --port 8000"
-generate-docs = "python generate_openapi.py"
+# [tool.poetry.scripts]
+# Note: Poetry scripts work better with packages. Use direct commands instead:
+# poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# poetry run python generate_openapi.py
