@@ -205,3 +205,19 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# OpenAPI Generator and build tools
+*.jar
+openapi-generator-cli-*.jar
+
+# Generated OpenAPI files (optional - you might want to track these)
+# openapi.json
+# openapi.yaml
+
+# Poetry virtual environment
+.venv/
+
+# FastAPI specific
+.env
+.env.local
+.env.*.local

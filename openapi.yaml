@@ -1,0 +1,257 @@
+openapi: 3.1.0
+info:
+  title: OCR Toolkit API
+  description: API for optical character recognition operations including text extraction
+    and language detection
+  contact:
+    name: OCR Toolkit
+    email: support@ocr-toolkit.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  version: 1.0.0
+paths:
+  /:
+    get:
+      summary: Root
+      description: Root endpoint - API health check
+      operationId: root__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /health:
+    get:
+      summary: Health Check
+      description: Health check endpoint
+      operationId: health_check_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /extract-text:
+    post:
+      tags:
+      - OCR Operations
+      summary: Extract text from image or document
+      description: Uploads a file and extracts all readable text from it using OCR
+        technology. Supports JPEG, PNG, WEBP, and PDF formats.
+      operationId: extract_text_extract_text_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_extract_text_extract_text_post'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtractTextResponse'
+        '400':
+          description: Bad request - invalid file format or missing file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable entity - file cannot be processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /detect-language:
+    post:
+      tags:
+      - OCR Operations
+      summary: Detect languages in image or document
+      description: Uploads a file and detects the languages used in the text content.
+        Returns detected languages with confidence scores.
+      operationId: detect_language_detect_language_post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_detect_language_detect_language_post'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectLanguageResponse'
+        '400':
+          description: Bad request - invalid file format or missing file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable entity - file cannot be processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    Body_detect_language_detect_language_post:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+          description: Image or document file (supports JPEG, PNG, WEBP, PDF)
+      type: object
+      required:
+      - file
+      title: Body_detect_language_detect_language_post
+    Body_extract_text_extract_text_post:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+          description: Image or document file (supports JPEG, PNG, WEBP, PDF)
+      type: object
+      required:
+      - file
+      title: Body_extract_text_extract_text_post
+    DetectLanguageResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Operation success status
+          default: true
+        detected_languages:
+          items:
+            $ref: '#/components/schemas/DetectedLanguage'
+          type: array
+          title: Detected Languages
+          description: List of detected languages with confidence scores
+        primary_language:
+          type: string
+          title: Primary Language
+          description: The most dominant language detected
+        processing_time:
+          type: number
+          title: Processing Time
+          description: Time taken to process the file in seconds
+      type: object
+      required:
+      - detected_languages
+      - primary_language
+      - processing_time
+      title: DetectLanguageResponse
+    DetectedLanguage:
+      properties:
+        language:
+          type: string
+          title: Language
+          description: Language name
+        language_code:
+          type: string
+          title: Language Code
+          description: ISO 639-1 language code
+        confidence:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Confidence
+          description: Confidence score for this language detection
+        text_percentage:
+          type: number
+          maximum: 100.0
+          minimum: 0.0
+          title: Text Percentage
+          description: Percentage of text in this language
+      type: object
+      required:
+      - language
+      - language_code
+      - confidence
+      - text_percentage
+      title: DetectedLanguage
+    ErrorResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Operation success status
+          default: false
+        error:
+          type: string
+          title: Error
+          description: Error message describing what went wrong
+        error_code:
+          type: string
+          title: Error Code
+          description: Machine-readable error code
+        timestamp:
+          type: string
+          format: date-time
+          title: Timestamp
+          description: ISO 8601 timestamp when the error occurred
+      type: object
+      required:
+      - error
+      - error_code
+      title: ErrorResponse
+    ExtractTextResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+          description: Operation success status
+          default: true
+        extracted_text:
+          type: string
+          title: Extracted Text
+          description: The extracted text from the uploaded file
+        confidence_score:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Confidence Score
+          description: OCR confidence score (0-1)
+        processing_time:
+          type: number
+          title: Processing Time
+          description: Time taken to process the file in seconds
+      type: object
+      required:
+      - extracted_text
+      - confidence_score
+      - processing_time
+      title: ExtractTextResponse
