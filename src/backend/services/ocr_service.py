@@ -81,13 +81,14 @@ class FileValidationService:
         content_type = file.content_type
         if content_type in [None, "application/octet-stream"] and file.filename:
             import os
+
             ext = os.path.splitext(file.filename)[1].lower()
             content_type_map = {
-                '.jpg': 'image/jpeg',
-                '.jpeg': 'image/jpeg', 
-                '.png': 'image/png',
-                '.webp': 'image/webp',
-                '.pdf': 'application/pdf'
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".png": "image/png",
+                ".webp": "image/webp",
+                ".pdf": "application/pdf",
             }
             content_type = content_type_map.get(ext)
 
@@ -130,7 +131,9 @@ class OCRService:
         try:
             # Open image with PIL
             image = Image.open(io.BytesIO(image_bytes))
-            print(f"DEBUG: Processing image {filename} with size {image.size}, mode: {image.mode}")
+            print(
+                f"DEBUG: Processing image {filename} with size {image.size}, mode: {image.mode}"
+            )
 
             # Convert to RGB if necessary (for WEBP and other formats)
             if image.mode != "RGB":
@@ -141,10 +144,10 @@ class OCRService:
             # Use default Tesseract settings, no custom PSM or OEM
             extracted_text = pytesseract.image_to_string(image).strip()
             print(f"DEBUG: OCR result for {filename}: '{extracted_text}'")
-            
+
             # Set confidence based on whether text was found
             confidence_score = 0.85 if extracted_text else 0.0
-            
+
             return extracted_text, confidence_score
 
         except Exception as e:
@@ -236,13 +239,14 @@ class OCRService:
         content_type = file.content_type
         if content_type in [None, "application/octet-stream"] and file.filename:
             import os
+
             ext = os.path.splitext(file.filename)[1].lower()
             content_type_map = {
-                '.jpg': 'image/jpeg',
-                '.jpeg': 'image/jpeg', 
-                '.png': 'image/png',
-                '.webp': 'image/webp',
-                '.pdf': 'application/pdf'
+                ".jpg": "image/jpeg",
+                ".jpeg": "image/jpeg",
+                ".png": "image/png",
+                ".webp": "image/webp",
+                ".pdf": "application/pdf",
             }
             content_type = content_type_map.get(ext, content_type)
 

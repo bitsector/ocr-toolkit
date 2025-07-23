@@ -37,19 +37,19 @@ def test_openapi_schema_structure():
     response = client.get("/openapi.json")
     assert response.status_code == 200
     data = response.json()
-    
+
     # Check basic OpenAPI structure
     assert data["openapi"].startswith("3.")
     assert "title" in data["info"]
     assert "version" in data["info"]
-    
+
     # Check that our main endpoints are documented
     paths = data["paths"]
     assert "/" in paths
     assert "/health" in paths
     assert "/extract-text" in paths
     assert "/detect-language" in paths
-    
+
     # Check that endpoints have proper HTTP methods
     assert "get" in paths["/"]
     assert "get" in paths["/health"]
@@ -62,14 +62,14 @@ def test_openapi_endpoint_details():
     response = client.get("/openapi.json")
     assert response.status_code == 200
     data = response.json()
-    
+
     # Check extract-text endpoint details
     extract_text = data["paths"]["/extract-text"]["post"]
     assert "summary" in extract_text
     assert "description" in extract_text
     assert "tags" in extract_text
     assert "OCR Operations" in extract_text["tags"]
-    
+
     # Check detect-language endpoint details
     detect_language = data["paths"]["/detect-language"]["post"]
     assert "summary" in detect_language
@@ -83,13 +83,13 @@ def test_openapi_response_models():
     response = client.get("/openapi.json")
     assert response.status_code == 200
     data = response.json()
-    
+
     # Check that components/schemas section exists
     assert "components" in data
     assert "schemas" in data["components"]
-    
+
     schemas = data["components"]["schemas"]
-    
+
     # Check for our main response models
     assert "ExtractTextResponse" in schemas
     assert "DetectLanguageResponse" in schemas
