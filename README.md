@@ -7,7 +7,19 @@ A professional FastAPI-based backend for optical character recognition (OCR) ope
 ```
 ocr-toolkit/
 ├── src/backend/          # All source code and Poetry configuration
-│   ├── main.py          # FastAPI application with endpoints
+│   ├── api/             # API layer
+│   │   ├── __init__.py  # API package initialization
+│   │   └── endpoints.py # API endpoints and route definitions
+│   ├── models/          # Data models and schemas
+│   │   └── __init__.py  # Pydantic models for request/response
+│   ├── services/        # Business logic layer
+│   │   └── __init__.py  # Service implementations (empty for now)
+│   ├── db/              # Database layer
+│   │   └── __init__.py  # Database models and connections (empty for now)
+│   ├── cache/           # Caching layer
+│   │   └── __init__.py  # Cache utilities (empty for now)
+│   ├── main.py          # Main entry point for the application
+│   ├── fast_api_server.py  # FastAPI application configuration
 │   ├── generate_openapi.py  # Script to auto-generate OpenAPI docs
 │   ├── pyproject.toml   # Poetry configuration and dependencies
 │   └── poetry.lock      # Locked dependency versions
@@ -43,7 +55,7 @@ ocr-toolkit/
 
 4. **Start the development server:**
    ```bash
-   poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   poetry run uvicorn fast_api_server:app --reload --host 0.0.0.0 --port 8000
    ```
 
 5. **View the API documentation:**
@@ -93,7 +105,7 @@ The project automatically generates OpenAPI documentation in the `openapi/` dire
 
 3. **Start the development server:**
    ```bash
-   poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   poetry run uvicorn fast_api_server:app --reload --host 0.0.0.0 --port 8000
    ```
 
 ### Option 2: Using pip
@@ -159,7 +171,7 @@ To complete the implementation, you would typically:
 
 2. **Run the Backend Server:**
    ```bash
-   poetry run -C src/backend uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   poetry run -C src/backend uvicorn fast_api_server:app --reload --host 0.0.0.0 --port 8000
    ```
 
 3. **Health Check with cURL:**
@@ -296,7 +308,7 @@ For easier testing, you can also use the interactive Swagger UI:
 1. **Start the server from the backend directory:**
    ```bash
    cd src/backend
-   poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   poetry run uvicorn fast_api_server:app --reload --host 0.0.0.0 --port 8000
    ```
 2. **Open your browser to:** http://localhost:8000/docs
 3. **Click on any endpoint to expand it**
@@ -307,12 +319,36 @@ This provides a user-friendly interface for testing all endpoints without writin
 
 ## Project Architecture
 
-### FastAPI Application (`src/backend/main.py`)
+### FastAPI Application (`src/backend/fast_api_server.py`)
+- **Application factory** - Creates and configures the FastAPI app instance
+- **Router integration** - Includes API routes from `api.py`
+- **Centralized configuration** - App metadata, CORS, middleware setup
+
+### API Endpoints (`src/backend/api/endpoints.py`)
 - **Health check endpoint** (`/health`) - Service status monitoring
 - **Root endpoint** (`/`) - Basic API information
 - **Text extraction** (`/extract-text`) - OCR text extraction from images
 - **Language detection** (`/detect-language`) - Multi-language detection in images
-- **Automatic OpenAPI schema generation** with proper type annotations
+
+### Data Models (`src/backend/models/__init__.py`)
+- **Pydantic models** - Request/response validation and documentation
+- **Type definitions** - Structured data schemas for API contracts
+
+### Business Logic (`src/backend/services/`)
+- **Service layer** - Business logic implementation (empty for now)
+- **OCR processing** - Future home for OCR service implementations
+
+### Database Layer (`src/backend/db/`)
+- **Database models** - Data persistence layer (empty for now)
+- **Connection management** - Database connectivity utilities
+
+### Caching Layer (`src/backend/cache/`)
+- **Cache utilities** - Performance optimization layer (empty for now)
+- **Redis integration** - Future caching implementations
+
+### Main Entry Point (`src/backend/main.py`)
+- **Application entry point** - Starts the uvicorn server
+- **Development configuration** - Hot-reload and development settings
 
 ### OpenAPI Documentation Generation (`src/backend/generate_openapi.py`)
 - **Auto-generates** `openapi/openapi.json` and `openapi/openapi.yaml`

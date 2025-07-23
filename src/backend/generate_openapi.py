@@ -23,7 +23,7 @@ def main():
         # Import dependencies
         try:
             import yaml
-            from main import app
+            from fast_api_server import app
         except ImportError as e:
             print(f"❌ Error importing dependencies: {e}")
             print("Make sure to run: poetry install")
@@ -56,7 +56,7 @@ def main():
         print(f"  📄 {yaml_file} - OpenAPI specification in YAML format")
         print("")
         print("To view the documentation:")
-        print("  1. Start the server: poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000")
+        print("  1. Start the server: poetry run uvicorn fast_api_server:app --reload --host 0.0.0.0 --port 8000")
         print("  2. Visit: http://localhost:8000/docs (Swagger UI)")
         print("  3. Visit: http://localhost:8000/redoc (ReDoc)")
         print("  4. API JSON: http://localhost:8000/openapi.json")
@@ -74,7 +74,7 @@ def main():
             print("\n🚀 Starting FastAPI server automatically...")
             try:
                 import subprocess
-                subprocess.run([sys.executable, "-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"])
+                subprocess.run([sys.executable, "-m", "uvicorn", "fast_api_server:app", "--reload", "--host", "0.0.0.0", "--port", "8000"])
             except KeyboardInterrupt:
                 print("\n👋 Server stopped. Goodbye!")
             except Exception as e:
@@ -82,7 +82,7 @@ def main():
         else:
             print("\n✨ OpenAPI documentation generated successfully!")
             print("💡 Tip: Start the server manually with:")
-            print("   poetry run uvicorn main:app --reload --host 0.0.0.0 --port 8000")
+            print("   poetry run uvicorn fast_api_server:app --reload --host 0.0.0.0 --port 8000")
         
         return True
         
