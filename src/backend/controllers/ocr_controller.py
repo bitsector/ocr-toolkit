@@ -2,14 +2,11 @@
 # This layer handles HTTP-specific concerns like request validation, response formatting,
 # error handling, and delegates business logic to the core layer.
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from fastapi import HTTPException, UploadFile
 
-from models import (
-    DetectedLanguage,
-    DetectLanguageResponse,
-    ExtractTextResponse,
-)
+from models import DetectedLanguage, DetectLanguageResponse, ExtractTextResponse
 
 
 class OCRController:
@@ -27,11 +24,13 @@ class OCRController:
         """
         if not file:
             raise HTTPException(status_code=400, detail="No file provided")
-        
+
         if not file.filename:
             raise HTTPException(status_code=400, detail="File must have a filename")
 
-    def format_extract_text_response(self, extracted_text: str, confidence_score: float, processing_time: float) -> ExtractTextResponse:
+    def format_extract_text_response(
+        self, extracted_text: str, confidence_score: float, processing_time: float
+    ) -> ExtractTextResponse:
         """
         Format the OCR results into HTTP response.
         Synchronous response formatting after business logic completion.
@@ -50,11 +49,16 @@ class OCRController:
         """
         if not file:
             raise HTTPException(status_code=400, detail="No file provided")
-        
+
         if not file.filename:
             raise HTTPException(status_code=400, detail="File must have a filename")
 
-    def format_detect_language_response(self, detected_languages_data: List[Dict[str, Any]], primary_language: str, processing_time: float) -> DetectLanguageResponse:
+    def format_detect_language_response(
+        self,
+        detected_languages_data: List[Dict[str, Any]],
+        primary_language: str,
+        processing_time: float,
+    ) -> DetectLanguageResponse:
         """
         Format the language detection results into HTTP response.
         Synchronous response formatting after business logic completion.
@@ -84,4 +88,6 @@ class OCRController:
         """
         if isinstance(error, HTTPException):
             return error
-        return HTTPException(status_code=500, detail=f"Internal server error: {str(error)}")
+        return HTTPException(
+            status_code=500, detail=f"Internal server error: {str(error)}"
+        )

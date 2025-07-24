@@ -5,20 +5,21 @@ from typing import List, Optional
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 
-# Import models from the models package
-from models import (
-    DetectLanguageResponse,
-    ErrorResponse,
-    ExtractTextResponse,
-    DetectedLanguage,
-)
+from controllers.health_controller import HealthController
+
+# Import controllers for HTTP handling
+from controllers.ocr_controller import OCRController
 
 # Import core services for business logic
 from core import LanguageDetectionService, OCRService
 
-# Import controllers for HTTP handling
-from controllers.ocr_controller import OCRController
-from controllers.health_controller import HealthController
+# Import models from the models package
+from models import (
+    DetectedLanguage,
+    DetectLanguageResponse,
+    ErrorResponse,
+    ExtractTextResponse,
+)
 
 # Create API router
 router = APIRouter()
@@ -75,7 +76,11 @@ async def extract_text(
         ocr_controller.validate_extract_text_request(file)
 
         # Core service handles business logic (asynchronous)
-        extracted_text, confidence_score, processing_time = await OCRService.extract_text(file)
+        (
+            extracted_text,
+            confidence_score,
+            processing_time,
+        ) = await OCRService.extract_text(file)
 
         # Controller handles response formatting (synchronous)
         return ocr_controller.format_extract_text_response(
@@ -124,7 +129,11 @@ async def detect_language(
         ocr_controller.validate_detect_language_request(file)
 
         # Core service handles business logic (asynchronous)
-        detected_languages_data, primary_language, processing_time = await LanguageDetectionService.detect_language_in_file(file)
+        (
+            detected_languages_data,
+            primary_language,
+            processing_time,
+        ) = await LanguageDetectionService.detect_language_in_file(file)
 
         # Controller handles response formatting (synchronous)
         return ocr_controller.format_detect_language_response(

@@ -3,7 +3,7 @@
 # error handling, and delegates business logic to the core layer.
 
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 class HealthController:
@@ -17,17 +17,11 @@ class HealthController:
         Handle root endpoint request.
         Returns basic API status information.
         """
-        return {
-            "message": "OCR Toolkit API is running",
-            "status": "healthy"
-        }
+        return {"message": "OCR Toolkit API is running", "status": "healthy"}
 
     def get_health_status(self) -> Dict[str, Any]:
         """
         Handle health check endpoint request.
         Returns detailed health status with timestamp.
         """
-        return {
-            "status": "healthy",
-            "timestamp": datetime.now()
-        }
+        return {"status": "healthy", "timestamp": datetime.now()}
