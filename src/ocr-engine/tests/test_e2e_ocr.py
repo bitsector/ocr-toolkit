@@ -9,6 +9,11 @@ import time
 import pytest
 import requests
 
+from util.logger import get_cli_logger
+
+# Initialize logger for test output
+logger = get_cli_logger(__name__, verbose=True)
+
 # Configuration
 SAMPLE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../../../sample_files")
@@ -48,11 +53,11 @@ def test_ocr_file_extraction(filename):
     base_name = os.path.splitext(filename)[0].lower()
     words = base_name.split("_")
 
-    print(f"\n{'='*60}")
-    print(f"TESTING FILE: {filename}")
-    print(f"{'='*60}")
-    print(f"Expected words: {words}")
-    print(f"File path: {filepath}")
+    logger.info(f"\n{'='*60}")
+    logger.info(f"TESTING FILE: {filename}")
+    logger.info(f"{'='*60}")
+    logger.info(f"Expected words: {words}")
+    logger.info(f"File path: {filepath}")
 
     # Send file to OCR endpoint
     with open(filepath, "rb") as f:
@@ -70,14 +75,14 @@ def test_ocr_file_extraction(filename):
         files = {"file": (filename, f, content_type)}
         response = requests.post(OCR_URL, files=files, timeout=30)
 
-    print(f"Response status: {response.status_code}")
-    print(f"Response headers: {dict(response.headers)}")
+    logger.info(f"Response status: {response.status_code}")
+    logger.debug(f"Response headers: {dict(response.headers)}")
 
     # Handle response
     if response.status_code == 200:
         # Successful OCR processing
         data = response.json()
-        print(f"Full response JSON: {data}")
+        logger.debug(f"Full response JSON: {data}")
 
         # Extract text from response
         assert (
@@ -85,18 +90,18 @@ def test_ocr_file_extraction(filename):
         ), f"Response missing 'extracted_text' field for {filename}"
         extracted_text = data["extracted_text"].lower()
 
-        print(f"Extracted text: '{extracted_text}'")
-        print(f"Extracted text length: {len(extracted_text)}")
-        print(f"Confidence score: {data.get('confidence_score', 'N/A')}")
+        logger.info(f"Extracted text: '{extracted_text}'")
+        logger.info(f"Extracted text length: {len(extracted_text)}")
+        logger.info(f"Confidence score: {data.get('confidence_score', 'N/A')}")
 
         # Check that all expected words are present in the OCR result
         missing_words = []
         for word in words:
-            print(f"Looking for '{word}' in extracted text...")
+            logger.debug(f"Looking for '{word}' in extracted text...")
             if word not in extracted_text:
                 missing_words.append(word)
             else:
-                print(f"✓ Found '{word}'")
+                logger.info(f"✓ Found '{word}'")
 
         # Assert all words were found - STRICT MODE
         if missing_words:
@@ -106,26 +111,26 @@ def test_ocr_file_extraction(filename):
             )
             assert False, error_msg
 
-        print(f"{'='*60}")
-        print(f"✅ COMPLETED: {filename} - ALL WORDS FOUND!")
-        print(f"{'='*60}\n")
+        logger.info(f"{'='*60}")
+        logger.info(f"✅ COMPLETED: {filename} - ALL WORDS FOUND!")
+        logger.info(f"{'='*60}\n")
 
     elif response.status_code == 400:
         # Bad request - could be file format or validation issue
         data = response.json()
-        print(f"Validation error response: {data}")
+        logger.error(f"Validation error response: {data}")
         assert False, f"File validation failed for {filename}: {response.text}"
 
     elif response.status_code == 422:
         # Unprocessable entity - OCR processing failed
         data = response.json()
-        print(f"OCR processing error response: {data}")
+        logger.error(f"OCR processing error response: {data}")
         assert False, f"OCR processing failed for {filename}: {response.text}"
 
     elif response.status_code == 413:
         # File too large
         data = response.json()
-        print(f"File too large response: {data}")
+        logger.error(f"File too large response: {data}")
         assert False, f"File too large for {filename}: {response.text}"
 
     else:
@@ -149,9 +154,9 @@ def test_server_root_endpoint():
 
 if __name__ == "__main__":
     # Can be run directly for local testing
-    print("Running E2E OCR tests...")
-    print(f"Sample files directory: {SAMPLE_DIR}")
-    print(f"Available sample files: {sample_files}")
+    logger.info("Running E2E OCR tests...")
+    logger.info(f"Sample files directory: {SAMPLE_DIR}")
+    logger.info(f"Available sample files: {sample_files}")
 
     # Run tests
     pytest.main([__file__, "-v", "--tb=short"])
