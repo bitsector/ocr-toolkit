@@ -81,7 +81,9 @@ def main():
         # Display some stats
         logger.info("API Summary:")
         logger.info(f"  📊 Title: {openapi_schema.get('info', {}).get('title', 'N/A')}")
-        logger.info(f"  📊 Version: {openapi_schema.get('info', {}).get('version', 'N/A')}")
+        logger.info(
+            f"  📊 Version: {openapi_schema.get('info', {}).get('version', 'N/A')}"
+        )
         logger.info(f"  📊 Endpoints: {len(openapi_schema.get('paths', {}))}")
         logger.info(
             f"  📊 Models: {len(openapi_schema.get('components', {}).get('schemas', {}))}"
