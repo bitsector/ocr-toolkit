@@ -17,7 +17,7 @@ Usage:
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
+from typing import List, Union
 
 from util.logger import get_service_logger
 
@@ -38,16 +38,45 @@ class OCRConfig:
     language_detection_fallback_confidence: float  # Fallback confidence for language detection
 
     # Content type configuration
-    allowed_content_types: list  # List of allowed MIME types
+    allowed_content_types: List[str]  # List of allowed MIME types
 
     # Language detection
     fallback_language: str  # Default language when detection fails
     fallback_language_code: str  # Default language code when detection fails
 
 
+def _get_env_str(key: str, default: str) -> str:
+    """Get environment variable as string"""
+    return os.getenv(key, default)
+
+
+def _get_env_int(key: str, default: int) -> int:
+    """Get environment variable as int"""
+    value = os.getenv(key)
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Failed to convert {key}='{value}' to int: {e}")
+        return default
+
+
+def _get_env_float(key: str, default: float) -> float:
+    """Get environment variable as float"""
+    value = os.getenv(key)
+    if value is None:
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Failed to convert {key}='{value}' to float: {e}")
+        return default
+
+
 def _get_env_var(
-    key: str, default: Union[str, int, float, bool], var_type: type = str
-) -> Union[str, int, float, bool]:
+    key: str, default: Union[str, int, float, bool, List[str]], var_type: type = str
+) -> Union[str, int, float, bool, List[str]]:
     """
     Get environment variable with type conversion and default fallback
 
@@ -159,16 +188,14 @@ def get_config() -> OCRConfig:
     )
 
     # File processing limits
-    max_file_size = _get_env_var(
-        "OCR_MAX_FILE_SIZE", 10 * 1024 * 1024, int
-    )  # 10MB default
+    max_file_size = _get_env_int("OCR_MAX_FILE_SIZE", 10 * 1024 * 1024)  # 10MB default
 
     # OCR confidence scores
-    ocr_confidence_score = _get_env_var("OCR_CONFIDENCE_SCORE", 0.85, float)
-    ocr_no_text_confidence = _get_env_var("OCR_NO_TEXT_CONFIDENCE", 0.0, float)
-    pdf_text_confidence = _get_env_var("PDF_TEXT_CONFIDENCE", 0.95, float)
-    language_detection_fallback_confidence = _get_env_var(
-        "LANGUAGE_DETECTION_FALLBACK_CONFIDENCE", 0.5, float
+    ocr_confidence_score = _get_env_float("OCR_CONFIDENCE_SCORE", 0.85)
+    ocr_no_text_confidence = _get_env_float("OCR_NO_TEXT_CONFIDENCE", 0.0)
+    pdf_text_confidence = _get_env_float("PDF_TEXT_CONFIDENCE", 0.95)
+    language_detection_fallback_confidence = _get_env_float(
+        "LANGUAGE_DETECTION_FALLBACK_CONFIDENCE", 0.5
     )
 
     # Content types (comma-separated in env var)
@@ -179,15 +206,20 @@ def get_config() -> OCRConfig:
         "image/webp",
         "application/pdf",
     ]
-    allowed_content_types = _get_env_var(
-        "OCR_ALLOWED_CONTENT_TYPES", default_content_types, list
-    )
+    # For list types, we need to handle the conversion differently
+    allowed_content_types_env = os.getenv("OCR_ALLOWED_CONTENT_TYPES")
+    if allowed_content_types_env:
+        allowed_content_types = [
+            item.strip()
+            for item in allowed_content_types_env.split(",")
+            if item.strip()
+        ]
+    else:
+        allowed_content_types = default_content_types
 
     # Language detection fallbacks
-    fallback_language = _get_env_var(
-        "LANGUAGE_DETECTION_FALLBACK_LANGUAGE", "English", str
-    )
-    fallback_language_code = _get_env_var("LANGUAGE_DETECTION_FALLBACK_CODE", "en", str)
+    fallback_language = _get_env_str("LANGUAGE_DETECTION_FALLBACK_LANGUAGE", "English")
+    fallback_language_code = _get_env_str("LANGUAGE_DETECTION_FALLBACK_CODE", "en")
 
     config = OCRConfig(
         max_file_size=max_file_size,
