@@ -3,8 +3,9 @@
 # It's independent of HTTP concerns and can be used by controllers or other interfaces.
 
 import io
+import os
 import time
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 
 import fitz  # PyMuPDF for PDF processing
 import pytesseract
@@ -90,8 +91,6 @@ class FileValidationService:
         # If content_type is not set or is generic, try to determine from filename
         content_type = file.content_type
         if content_type in [None, "application/octet-stream"] and file.filename:
-            import os
-
             ext = os.path.splitext(file.filename)[1].lower()
             content_type_map = {
                 ".jpg": "image/jpeg",
@@ -248,8 +247,6 @@ class OCRService:
         # Determine content type for processing (similar logic as in validation)
         content_type = file.content_type
         if content_type in [None, "application/octet-stream"] and file.filename:
-            import os
-
             ext = os.path.splitext(file.filename)[1].lower()
             content_type_map = {
                 ".jpg": "image/jpeg",

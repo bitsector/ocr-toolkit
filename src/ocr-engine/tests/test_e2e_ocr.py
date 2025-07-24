@@ -4,7 +4,6 @@ Tests the full OCR pipeline with real sample files against a running server.
 """
 
 import os
-import time
 
 import pytest
 import requests

@@ -27,6 +27,7 @@ httpx = "^0.25.0"
 requests = "^2.31.0"
 types-pyyaml = "^6.0.12.20250516"
 types-requests = "^2.32.4.20250611"
+flake8 = "^6.0.0"
 
 [build-system]
 requires = ["poetry-core"]

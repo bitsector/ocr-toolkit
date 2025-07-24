@@ -7,8 +7,11 @@ Usage:
 """
 
 import json
+import subprocess
 import sys
 from pathlib import Path
+
+import yaml
 
 from util.logger import get_cli_logger
 
@@ -28,8 +31,6 @@ def main():
     try:
         # Import dependencies
         try:
-            import yaml
-
             from fast_api_server import app
         except ImportError as e:
             logger.error(f"❌ Error importing dependencies: {e}")
@@ -93,8 +94,6 @@ def main():
         if start_server:
             logger.info("\n🚀 Starting FastAPI server automatically...")
             try:
-                import subprocess
-
                 subprocess.run(
                     [
                         sys.executable,

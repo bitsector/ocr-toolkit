@@ -2,7 +2,6 @@
 Tests for OpenAPI documentation generation and accessibility.
 """
 
-import pytest
 from fastapi.testclient import TestClient
 
 from fast_api_server import app

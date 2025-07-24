@@ -6,11 +6,9 @@ This is the main entry point for the OCR Toolkit API application.
 The actual FastAPI server configuration is in fast_api_server.py
 """
 
+import uvicorn
+
 if __name__ == "__main__":
-    import uvicorn
-
-    from fast_api_server import app
-
     # Start the development server
     uvicorn.run(
         "fast_api_server:app",

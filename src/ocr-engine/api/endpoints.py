@@ -1,9 +1,4 @@
-import time
-from datetime import datetime
-from typing import List, Optional
-
 from fastapi import APIRouter, File, HTTPException, UploadFile
-from fastapi.responses import JSONResponse
 
 from controllers.health_controller import HealthController
 
@@ -14,12 +9,7 @@ from controllers.ocr_controller import OCRController
 from core import LanguageDetectionService, OCRService
 
 # Import models from the models package
-from models import (
-    DetectedLanguage,
-    DetectLanguageResponse,
-    ErrorResponse,
-    ExtractTextResponse,
-)
+from models import DetectLanguageResponse, ErrorResponse, ExtractTextResponse
 
 # Create API router
 router = APIRouter()
