@@ -317,11 +317,47 @@ jobs:
         cd src/backend
         poetry install --with dev
 
+    - name: Start OCR API server for E2E tests
+      run: |
+        cd src/backend
+        # Start the server in the background
+        poetry run uvicorn fast_api_server:app --host 0.0.0.0 --port 8000 &
+        SERVER_PID=$!
+        echo $SERVER_PID > server.pid
+        
+        # Wait for server to start and verify it's healthy
+        echo "Waiting for server to start..."
+        for i in {1..30}; do
+          if curl --fail --silent http://localhost:8000/health > /dev/null 2>&1; then
+            echo "Server is healthy and ready!"
+            break
+          fi
+          echo "Waiting for server... attempt $i/30"
+          sleep 1
+        done
+        
+        # Final verification
+        curl -f http://localhost:8000/health || exit 1
+        curl -f http://localhost:8000/ || exit 1
+        
+        echo "Server started successfully with PID $SERVER_PID"
+
     - name: Run End-to-End OCR Tests
       run: |
         cd src/backend
         # Run E2E tests that validate the full OCR pipeline with real sample files
         poetry run pytest tests/test_e2e_ocr.py -v
+
+    - name: Stop OCR API server
+      if: always()
+      run: |
+        cd src/backend
+        if [ -f server.pid ]; then
+          SERVER_PID=$(cat server.pid)
+          kill $SERVER_PID || true
+          rm server.pid
+          echo "Server stopped"
+        fi
 
   integration-test:
     runs-on: ubuntu-latest
