@@ -14,6 +14,8 @@ def get_config_value(key: str, default: str = None) -> str:
         return value
     # Optionally, you could load from .env here if needed, but os.getenv covers both if dotenv is loaded
     return default
+
+
 """
 Configuration management for OCR Toolkit
 
