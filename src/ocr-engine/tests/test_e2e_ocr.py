@@ -23,9 +23,13 @@ HEALTH_URL = "http://localhost:8000/health"
 # Always use strict mode - ALL words must be found
 STRICT_MODE = True
 
-# List all sample files
+# List all sample files that are valid for OCR (images and PDFs)
+valid_ocr_extensions = {".jpg", ".jpeg", ".png", ".webp", ".pdf"}
 sample_files = [
-    f for f in os.listdir(SAMPLE_DIR) if os.path.isfile(os.path.join(SAMPLE_DIR, f))
+    f
+    for f in os.listdir(SAMPLE_DIR)
+    if os.path.isfile(os.path.join(SAMPLE_DIR, f))
+    and os.path.splitext(f)[1].lower() in valid_ocr_extensions
 ]
 
 
