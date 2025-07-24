@@ -15,8 +15,9 @@ from langdetect.lang_detect_exception import LangDetectException
 from PIL import Image
 from PIL.Image import Image as PILImage
 
-from util.config import get_cached_config
+from util.config import get_cached_config, get_config_value
 from util.file_validation import validate_file_contents
+from util.image_preparation import image_preparation
 from util.logger import get_service_logger
 
 # Initialize logger for this service
@@ -133,20 +134,55 @@ class OCRService:
     @staticmethod
     def extract_text_from_image(image_bytes: bytes, filename: str) -> Tuple[str, float]:
         """
-        Extract text from image using Tesseract OCR.
-        Simple approach matching Tesseract.js implementation.
-
-        Args:
-            image_bytes: Image data as bytes
-            filename: Original filename for error reporting
-
-        Returns:
-            Tuple[str, float]: Extracted text and confidence score
-
-        Raises:
-            HTTPException: If OCR processing fails
+        Extract text from image using Tesseract OCR, with optional preprocessing.
         """
         try:
+            # Read preprocessing options from .env/config
+            resize = get_config_value("OCR_IMAGE_RESIZE", "false").lower() == "true"
+            enhance_contrast = (
+                get_config_value("OCR_IMAGE_ENHANCE_CONTRAST", "false").lower()
+                == "true"
+            )
+            binarization = (
+                get_config_value("OCR_IMAGE_BINARIZATION", "false").lower() == "true"
+            )
+            edge_enhancement = (
+                get_config_value("OCR_IMAGE_EDGE_ENHANCEMENT", "false").lower()
+                == "true"
+            )
+            color_inversion = (
+                get_config_value("OCR_IMAGE_COLOR_INVERSION", "false").lower() == "true"
+            )
+            noise_removal = (
+                get_config_value("OCR_IMAGE_NOISE_REMOVAL", "false").lower() == "true"
+            )
+            cropping_str = get_config_value("OCR_IMAGE_CROPPING", "")
+            cropping = None
+            if cropping_str:
+                try:
+                    cropping = tuple(map(int, cropping_str.split(",")))
+                    if len(cropping) != 4:
+                        cropping = None
+                except Exception:
+                    cropping = None
+
+            # Only apply preprocessing for images (not PDFs)
+            ext = os.path.splitext(filename)[1].lower()
+            if ext in [".jpg", ".jpeg", ".png", ".webp"]:
+                processed = image_preparation(
+                    image_bytes,
+                    resize=resize,
+                    enhance_contrast=enhance_contrast,
+                    binarization=binarization,
+                    edge_enhancement=edge_enhancement,
+                    color_inversion=color_inversion,
+                    noise_removal=noise_removal,
+                    cropping=cropping,
+                    image_format="jpeg",
+                )
+                if processed is not None:
+                    image_bytes = processed
+
             # Open image with PIL
             image: PILImage = Image.open(io.BytesIO(image_bytes))
             logger.debug(
@@ -159,7 +195,6 @@ class OCRService:
                 logger.debug("Converted image to RGB mode")
 
             # Simple OCR extraction - matching Tesseract.js approach
-            # Use default Tesseract settings, no custom PSM or OEM
             extracted_text = pytesseract.image_to_string(image).strip()
             logger.debug(f"OCR result for {filename}: '{extracted_text}'")
 

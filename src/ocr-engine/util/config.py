@@ -1,3 +1,19 @@
+# Utility function to get a config value from environment, .env, or default
+def get_config_value(key: str, default: str = None) -> str:
+    """
+    Get a configuration value from environment variables, .env, or default.
+    Args:
+        key (str): The environment variable/config key
+        default (str, optional): The default value if not set. Defaults to None.
+    Returns:
+        str: The value as a string (or default if not set)
+    """
+    # Priority: environment variable > .env > default
+    value = os.getenv(key)
+    if value is not None:
+        return value
+    # Optionally, you could load from .env here if needed, but os.getenv covers both if dotenv is loaded
+    return default
 """
 Configuration management for OCR Toolkit
 
