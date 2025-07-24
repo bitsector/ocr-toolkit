@@ -8,7 +8,7 @@ This module provides centralized configuration management with the following pri
 
 Usage:
     from util.config import get_config
-    
+
     config = get_config()
     max_file_size = config.max_file_size
     ocr_confidence = config.ocr_confidence_score

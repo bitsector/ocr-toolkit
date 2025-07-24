@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Auto-generate OpenAPI documentation from FastAPI application
-Usage: 
+Usage:
   python generate_openapi.py
   poetry run generate-docs
 """

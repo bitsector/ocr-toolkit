@@ -119,8 +119,7 @@ class FileValidationService:
         if len(file_content) > max_size:
             max_size_mb = max_size / (1024 * 1024)
             raise HTTPException(
-                status_code=413,
-                detail=f"File too large. Maximum size is {max_size_mb:.1f}MB",
+                status_code=413, detail=f"File too large. Maximum size is {max_size_mb:.1f}MB"
             )
 
         return file_content
@@ -155,7 +154,7 @@ class OCRService:
             # Convert to RGB if necessary (for WEBP and other formats)
             if image.mode != "RGB":
                 image = image.convert("RGB")
-                logger.debug(f"Converted image to RGB mode")
+                logger.debug("Converted image to RGB mode")
 
             # Simple OCR extraction - matching Tesseract.js approach
             # Use default Tesseract settings, no custom PSM or OEM
@@ -163,11 +162,7 @@ class OCRService:
             logger.debug(f"OCR result for {filename}: '{extracted_text}'")
 
             # Set confidence based on whether text was found
-            confidence_score = (
-                config.ocr_confidence_score
-                if extracted_text
-                else config.ocr_no_text_confidence
-            )
+            confidence_score = config.ocr_confidence_score if extracted_text else config.ocr_no_text_confidence
 
             return extracted_text, confidence_score
 

@@ -55,7 +55,7 @@ jobs:
     - name: Check for unused and non-top-level imports
       run: |
         cd src/ocr-engine
-        poetry run flake8 --select=F401,E402 --statistics .
+        poetry run flake8 --select=F401,E402 --exclude=.venv,venv,env,.env,__pycache__,.pytest_cache,.git --statistics .
 
   static-check:
     runs-on: ubuntu-latest
