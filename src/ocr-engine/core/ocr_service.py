@@ -15,10 +15,14 @@ from langdetect.lang_detect_exception import LangDetectException
 from PIL import Image
 from PIL.Image import Image as PILImage
 
+from util.config import get_cached_config
 from util.logger import get_service_logger
 
 # Initialize logger for this service
 logger = get_service_logger(__name__)
+
+# Load configuration
+config = get_cached_config()
 
 # Language code mappings for better readability
 LANGUAGE_NAMES = {
@@ -61,15 +65,15 @@ LANGUAGE_NAMES = {
 class FileValidationService:
     """Service for file validation operations"""
 
-    ALLOWED_CONTENT_TYPES = [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/webp",
-        "application/pdf",
-    ]
+    @staticmethod
+    def get_allowed_content_types() -> List[str]:
+        """Get allowed content types from configuration"""
+        return config.allowed_content_types
 
-    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+    @staticmethod
+    def get_max_file_size() -> int:
+        """Get maximum file size from configuration"""
+        return config.max_file_size
 
     @staticmethod
     async def validate_file(file: UploadFile) -> bytes:
@@ -102,7 +106,8 @@ class FileValidationService:
             content_type = content_type_map.get(ext)
 
         # Check file type
-        if content_type not in FileValidationService.ALLOWED_CONTENT_TYPES:
+        allowed_types = FileValidationService.get_allowed_content_types()
+        if content_type not in allowed_types:
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid file format. Only JPEG, PNG, WEBP, and PDF files are supported. Got: {content_type}",
@@ -110,9 +115,12 @@ class FileValidationService:
 
         # Read and check file size
         file_content = await file.read()
-        if len(file_content) > FileValidationService.MAX_FILE_SIZE:
+        max_size = FileValidationService.get_max_file_size()
+        if len(file_content) > max_size:
+            max_size_mb = max_size / (1024 * 1024)
             raise HTTPException(
-                status_code=413, detail="File too large. Maximum size is 10MB"
+                status_code=413,
+                detail=f"File too large. Maximum size is {max_size_mb:.1f}MB",
             )
 
         return file_content
@@ -155,7 +163,11 @@ class OCRService:
             logger.debug(f"OCR result for {filename}: '{extracted_text}'")
 
             # Set confidence based on whether text was found
-            confidence_score = 0.85 if extracted_text else 0.0
+            confidence_score = (
+                config.ocr_confidence_score
+                if extracted_text
+                else config.ocr_no_text_confidence
+            )
 
             return extracted_text, confidence_score
 
@@ -197,7 +209,7 @@ class OCRService:
                     # If we have extractable text, use it with high confidence
                     all_text.append(page_text)
                     all_confidences.append(
-                        0.95
+                        config.pdf_text_confidence
                     )  # High confidence for direct text extraction
                 else:
                     # If no text, try OCR on the page image
@@ -326,9 +338,9 @@ class LanguageDetectionService:
             # If language detection fails, assume English as fallback
             return [
                 {
-                    "language": "English",
-                    "language_code": "en",
-                    "confidence": 0.5,
+                    "language": config.fallback_language,
+                    "language_code": config.fallback_language_code,
+                    "confidence": config.language_detection_fallback_confidence,
                     "text_percentage": 100.0,
                 }
             ]
