@@ -238,7 +238,7 @@ jobs:
       run: |
         cd src/backend
         # Start the server in the background
-        poetry run uvicorn main:app --host 0.0.0.0 --port 8000 &
+        poetry run uvicorn fast_api_server:app --host 0.0.0.0 --port 8000 &
         SERVER_PID=$!
         
         # Wait for server to start
@@ -282,7 +282,7 @@ jobs:
           openapi/openapi.json
           openapi/openapi.yaml
 
-  test:
+  e2e-tests:
     runs-on: ubuntu-latest
     needs: [lint, static-check, security-check]
     steps:
@@ -313,19 +313,19 @@ jobs:
         key: venv-${{ runner.os }}-3.13-${{ hashFiles('**/poetry.lock') }}
 
     - name: Install dependencies
-      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
         cd src/backend
         poetry install --with dev
 
-    - name: Run unit tests
+    - name: Run End-to-End OCR Tests
       run: |
         cd src/backend
-        poetry run pytest -v
+        # Run E2E tests that validate the full OCR pipeline with real sample files
+        poetry run pytest tests/test_e2e_ocr.py -v
 
   integration-test:
     runs-on: ubuntu-latest
-    needs: [build, test]
+    needs: [build, e2e-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
@@ -357,7 +357,7 @@ jobs:
       run: |
         cd src/backend
         # Start the server in the background
-        poetry run uvicorn main:app --host 0.0.0.0 --port 8000 &
+        poetry run uvicorn fast_api_server:app --host 0.0.0.0 --port 8000 &
         SERVER_PID=$!
         
         # Wait for server to start
