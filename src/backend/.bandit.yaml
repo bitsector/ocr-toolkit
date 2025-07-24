@@ -1,0 +1,23 @@
+# Bandit configuration for OCR Toolkit
+# Focus on application code, exclude third-party dependencies
+
+# Exclude paths - don't scan dependencies or virtual environments
+exclude_dirs:
+  - ".venv"
+  - "venv" 
+  - ".env"
+  - "env"
+  - "site-packages"
+  - "__pycache__"
+  - ".pytest_cache"
+  - "node_modules"
+
+# Skip specific test IDs that are false positives
+skips:
+  - "B101"  # Skip assert_used test for test files
+
+# Set confidence level (LOW, MEDIUM, HIGH)
+confidence: "MEDIUM"
+
+# Set severity level (LOW, MEDIUM, HIGH) 
+level: "MEDIUM"

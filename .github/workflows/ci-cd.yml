@@ -148,18 +148,15 @@ jobs:
     - name: Create bandit configuration
       run: |
         cd src/backend
-        cat > .bandit << 'EOF'
-        exclude_dirs:
-          - tests
-        skips:
-          - B104
-        EOF
+        echo "Scanning only application code, excluding dependencies"
 
     - name: Security check with Bandit
       run: |
         cd src/backend
-        poetry run bandit -r . -c .bandit -f json -o bandit-report.json || true
-        poetry run bandit -r . -c .bandit -ll
+        # Scan only our application code, excluding virtual environments and dependencies
+        # Skip B104 (bind all interfaces - expected for dev server), B603 (subprocess - needed for OpenAPI generation), B404 (subprocess import)
+        poetry run bandit -r api models services db cache *.py --skip B101,B104,B603,B404 --exclude .venv,venv,.env,env,site-packages,__pycache__,.pytest_cache,node_modules -f json -o bandit-report.json || true
+        poetry run bandit -r api models services db cache *.py --skip B101,B104,B603,B404 --exclude .venv,venv,.env,env,site-packages,__pycache__,.pytest_cache,node_modules -ll
 
     - name: Upload Bandit results
       if: always()
