@@ -7,29 +7,37 @@ from fastapi.responses import JSONResponse
 
 # Import models from the models package
 from models import (
-    DetectedLanguage,
     DetectLanguageResponse,
     ErrorResponse,
     ExtractTextResponse,
+    DetectedLanguage,
 )
 
-# Import services
-from services import LanguageDetectionService, OCRService
+# Import core services for business logic
+from core import LanguageDetectionService, OCRService
+
+# Import controllers for HTTP handling
+from controllers.ocr_controller import OCRController
+from controllers.health_controller import HealthController
 
 # Create API router
 router = APIRouter()
+
+# Initialize controllers
+ocr_controller = OCRController()
+health_controller = HealthController()
 
 
 @router.get("/")
 async def root():
     """Root endpoint - API health check"""
-    return {"message": "OCR Toolkit API is running", "status": "healthy"}
+    return health_controller.get_root_status()
 
 
 @router.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "timestamp": datetime.now()}
+    return health_controller.get_health_status()
 
 
 @router.post(
@@ -63,24 +71,22 @@ async def extract_text(
     confidence scores and processing time metrics.
     """
     try:
-        # Use OCR service to extract text
-        (
-            extracted_text,
-            confidence_score,
-            processing_time,
-        ) = await OCRService.extract_text(file)
+        # Controller handles HTTP validation (synchronous)
+        ocr_controller.validate_extract_text_request(file)
 
-        return ExtractTextResponse(
-            success=True,
-            extracted_text=extracted_text,
-            confidence_score=confidence_score,
-            processing_time=processing_time,
+        # Core service handles business logic (asynchronous)
+        extracted_text, confidence_score, processing_time = await OCRService.extract_text(file)
+
+        # Controller handles response formatting (synchronous)
+        return ocr_controller.format_extract_text_response(
+            extracted_text, confidence_score, processing_time
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        # Controller handles error formatting (synchronous)
+        raise ocr_controller.handle_service_error(e)
 
 
 @router.post(
@@ -114,32 +120,19 @@ async def detect_language(
     present in the content along with confidence scores and percentages.
     """
     try:
-        # Use language detection service
-        (
-            detected_languages_data,
-            primary_language,
-            processing_time,
-        ) = await LanguageDetectionService.detect_language_in_file(file)
+        # Controller handles HTTP validation (synchronous)
+        ocr_controller.validate_detect_language_request(file)
 
-        # Convert to Pydantic models
-        detected_languages = [
-            DetectedLanguage(
-                language=lang_data["language"],
-                language_code=lang_data["language_code"],
-                confidence=lang_data["confidence"],
-                text_percentage=lang_data["text_percentage"],
-            )
-            for lang_data in detected_languages_data
-        ]
+        # Core service handles business logic (asynchronous)
+        detected_languages_data, primary_language, processing_time = await LanguageDetectionService.detect_language_in_file(file)
 
-        return DetectLanguageResponse(
-            success=True,
-            detected_languages=detected_languages,
-            primary_language=primary_language,
-            processing_time=processing_time,
+        # Controller handles response formatting (synchronous)
+        return ocr_controller.format_detect_language_response(
+            detected_languages_data, primary_language, processing_time
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+        # Controller handles error formatting (synchronous)
+        raise ocr_controller.handle_service_error(e)

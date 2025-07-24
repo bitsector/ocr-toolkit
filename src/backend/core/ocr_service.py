@@ -1,3 +1,7 @@
+# Core layer - Business logic for OCR and language detection services
+# This layer contains the core business logic, domain rules, and service implementations.
+# It's independent of HTTP concerns and can be used by controllers or other interfaces.
+
 import io
 import time
 from typing import List, Optional, Tuple
