@@ -6,13 +6,13 @@ A professional FastAPI-based backend for optical character recognition (OCR) ope
 
 ```
 ocr-toolkit/
-├── src/backend/          # All source code and Poetry configuration
+├── src/ocr-engine/          # All source code and Poetry configuration
 │   ├── api/             # API layer
 │   │   ├── __init__.py  # API package initialization
 │   │   └── endpoints.py # API endpoints and route definitions
 │   ├── models/          # Data models and schemas
 │   │   └── __init__.py  # Pydantic models for request/response
-│   ├── services/        # Business logic layer
+│   ├── core/            # Business logic layer
 │   │   ├── __init__.py  # Service exports
 │   │   └── ocr_service.py # OCR and language detection services
 │   ├── db/              # Database layer
@@ -64,7 +64,7 @@ tesseract --version
 
 1. **Navigate to the backend directory:**
    ```bash
-   cd src/backend
+   cd src/ocr-engine
    ```
 
 2. **Install dependencies:**
@@ -119,7 +119,7 @@ The project automatically generates OpenAPI documentation in the `openapi/` dire
 
 1. **Navigate to the backend directory:**
    ```bash
-   cd src/backend
+   cd src/ocr-engine
    ```
 
 2. **Install dependencies:**
@@ -136,7 +136,7 @@ The project automatically generates OpenAPI documentation in the `openapi/` dire
 
 1. **Navigate to the backend directory:**
    ```bash
-   cd src/backend
+   cd src/ocr-engine
    ```
 
 2. **Create a virtual environment:**
@@ -168,7 +168,7 @@ Once the server is running (from either option above), you can:
 
 3. **Generate static OpenAPI files:**
    ```bash
-   # From src/backend/ directory
+   # From src/ocr-engine/ directory
    poetry run python generate_openapi.py
    ```
    This creates `openapi/openapi.json` and `openapi/openapi.yaml` files.
@@ -190,12 +190,12 @@ To complete the implementation, you would typically:
 
 1. **Generate OpenAPI Schemas (non-blocking):**
    ```bash
-   poetry run -C src/backend python generate_openapi.py --no-server
+   poetry run -C src/ocr-engine python generate_openapi.py --no-server
    ```
 
 2. **Run the Backend Server:**
    ```bash
-   poetry run -C src/backend uvicorn fast_api_server:app --reload --host 0.0.0.0 --port 8000
+   poetry run -C src/ocr-engine uvicorn fast_api_server:app --reload --host 0.0.0.0 --port 8000
    ```
 
    **Note**: If you get Tesseract-related errors, make sure Tesseract OCR is installed on your system (see Prerequisites section).
@@ -333,7 +333,7 @@ For easier testing, you can also use the interactive Swagger UI:
 
 1. **Start the server from the backend directory:**
    ```bash
-   cd src/backend
+   cd src/ocr-engine
    poetry run uvicorn fast_api_server:app --reload --host 0.0.0.0 --port 8000
    ```
 2. **Open your browser to:** http://localhost:8000/docs
@@ -345,47 +345,47 @@ This provides a user-friendly interface for testing all endpoints without writin
 
 ## Project Architecture
 
-### FastAPI Application (`src/backend/fast_api_server.py`)
+### FastAPI Application (`src/ocr-engine/fast_api_server.py`)
 - **Application factory** - Creates and configures the FastAPI app instance
 - **Router integration** - Includes API routes from `api.py`
 - **Centralized configuration** - App metadata, CORS, middleware setup
 
-### API Endpoints (`src/backend/api/endpoints.py`)
+### API Endpoints (`src/ocr-engine/api/endpoints.py`)
 - **Health check endpoint** (`/health`) - Service status monitoring
 - **Root endpoint** (`/`) - Basic API information
 - **Text extraction** (`/extract-text`) - OCR text extraction from images
 - **Language detection** (`/detect-language`) - Multi-language detection in images
 
-### Data Models (`src/backend/models/__init__.py`)
+### Data Models (`src/ocr-engine/models/__init__.py`)
 - **Pydantic models** - Request/response validation and documentation
 - **Type definitions** - Structured data schemas for API contracts
 
-### Business Logic (`src/backend/services/ocr_service.py`)
+### Business Logic (`src/ocr-engine/core/ocr_service.py`)
 - **OCR Service** - Tesseract-based text extraction from images and PDFs
 - **Language Detection Service** - Multi-language detection using langdetect
 - **File Validation Service** - File type and size validation
 - **Image Processing** - PIL-based image preprocessing for better OCR results
 - **PDF Processing** - PyMuPDF integration for PDF text extraction and OCR
 
-### Database Layer (`src/backend/db/`)
+### Database Layer (`src/ocr-engine/db/`)
 - **Database models** - Data persistence layer (empty for now)
 - **Connection management** - Database connectivity utilities
 
-### Caching Layer (`src/backend/cache/`)
+### Caching Layer (`src/ocr-engine/cache/`)
 - **Cache utilities** - Performance optimization layer (empty for now)
 - **Redis integration** - Future caching implementations
 
-### Main Entry Point (`src/backend/main.py`)
+### Main Entry Point (`src/ocr-engine/main.py`)
 - **Application entry point** - Starts the uvicorn server
 - **Development configuration** - Hot-reload and development settings
 
-### OpenAPI Documentation Generation (`src/backend/generate_openapi.py`)
+### OpenAPI Documentation Generation (`src/ocr-engine/generate_openapi.py`)
 - **Auto-generates** `openapi/openapi.json` and `openapi/openapi.yaml`
 - **Extracts schema** directly from FastAPI application code
 - **Maintains consistency** between implementation and documentation
 - **Poetry script integration** via `generate-docs` command
 
-### Dependency Management (`src/backend/pyproject.toml`)
+### Dependency Management (`src/ocr-engine/pyproject.toml`)
 - **Poetry-based** package and dependency management
 - **Development dependencies** (black, isort, pytest, httpx)
 - **Production dependencies** (fastapi, uvicorn, python-multipart, pyyaml)
@@ -408,7 +408,7 @@ See [CI-CD.md](CI-CD.md) for detailed pipeline documentation.
 Run the same checks locally before committing:
 
 ```bash
-cd src/backend
+cd src/ocr-engine
 
 # Auto-format code
 poetry run black .

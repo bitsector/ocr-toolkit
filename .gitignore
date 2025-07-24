@@ -216,9 +216,9 @@ openapi/openapi.yaml
 
 # Development tool configurations (auto-generated in CI)
 # These files are created dynamically and should not be committed
-src/backend/mypy.ini
-src/backend/.bandit
-src/backend/bandit-report.json
+src/ocr-engine/mypy.ini
+src/ocr-engine/.bandit
+src/ocr-engine/bandit-report.json
 
 # CI/CD artifacts and temporary files
 **/bandit-report.json

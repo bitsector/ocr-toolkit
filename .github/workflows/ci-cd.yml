@@ -33,23 +33,23 @@ jobs:
       id: cached-poetry-dependencies
       uses: actions/cache@v4
       with:
-        path: src/backend/.venv
+        path: src/ocr-engine/.venv
         key: venv-${{ runner.os }}-3.13-${{ hashFiles('**/poetry.lock') }}
 
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
-        cd src/backend
+        cd src/ocr-engine
         poetry install --with dev
 
     - name: Code formatting check with Black
       run: |
-        cd src/backend
+        cd src/ocr-engine
         poetry run black --check --diff .
 
     - name: Import sorting check with isort
       run: |
-        cd src/backend
+        cd src/ocr-engine
         poetry run isort --check-only --diff . --profile black
 
   static-check:
@@ -73,18 +73,18 @@ jobs:
       id: cached-poetry-dependencies
       uses: actions/cache@v4
       with:
-        path: src/backend/.venv
+        path: src/ocr-engine/.venv
         key: venv-${{ runner.os }}-3.13-${{ hashFiles('**/poetry.lock') }}
 
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
-        cd src/backend
+        cd src/ocr-engine
         poetry install --with dev
 
     - name: Create mypy configuration
       run: |
-        cd src/backend
+        cd src/ocr-engine
         cat > mypy.ini << 'EOF'
         [mypy]
         python_version = 3.13
@@ -112,7 +112,7 @@ jobs:
 
     - name: Static type checking with mypy
       run: |
-        cd src/backend
+        cd src/ocr-engine
         poetry run mypy . --config-file mypy.ini
 
   security-check:
@@ -136,23 +136,23 @@ jobs:
       id: cached-poetry-dependencies
       uses: actions/cache@v4
       with:
-        path: src/backend/.venv
+        path: src/ocr-engine/.venv
         key: venv-${{ runner.os }}-3.13-${{ hashFiles('**/poetry.lock') }}
 
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
-        cd src/backend
+        cd src/ocr-engine
         poetry install --with dev
 
     - name: Create bandit configuration
       run: |
-        cd src/backend
+        cd src/ocr-engine
         echo "Scanning only application code, excluding dependencies"
 
     - name: Security check with Bandit
       run: |
-        cd src/backend
+        cd src/ocr-engine
         # Scan only our application code, excluding virtual environments and dependencies
         # Skip B104 (bind all interfaces - expected for dev server), B603 (subprocess - needed for OpenAPI generation), B404 (subprocess import)
         poetry run bandit -r api models services db cache *.py --skip B101,B104,B603,B404 --exclude .venv,venv,.env,env,site-packages,__pycache__,.pytest_cache,node_modules -f json -o bandit-report.json || true
@@ -163,7 +163,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: bandit-results
-        path: src/backend/bandit-report.json
+        path: src/ocr-engine/bandit-report.json
 
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@0.28.0
@@ -225,18 +225,18 @@ jobs:
       id: cached-poetry-dependencies
       uses: actions/cache@v4
       with:
-        path: src/backend/.venv
+        path: src/ocr-engine/.venv
         key: venv-${{ runner.os }}-3.13-${{ hashFiles('**/poetry.lock') }}
 
     - name: Install dependencies
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
-        cd src/backend
+        cd src/ocr-engine
         poetry install --with dev
 
     - name: Test server startup
       run: |
-        cd src/backend
+        cd src/ocr-engine
         # Start the server in the background
         poetry run uvicorn fast_api_server:app --host 0.0.0.0 --port 8000 &
         SERVER_PID=$!
@@ -253,7 +253,7 @@ jobs:
 
     - name: Test OpenAPI generation
       run: |
-        cd src/backend
+        cd src/ocr-engine
         poetry run python generate_openapi.py --no-server
         
         # Check if OpenAPI files were generated
@@ -309,17 +309,17 @@ jobs:
       id: cached-poetry-dependencies
       uses: actions/cache@v4
       with:
-        path: src/backend/.venv
+        path: src/ocr-engine/.venv
         key: venv-${{ runner.os }}-3.13-${{ hashFiles('**/poetry.lock') }}
 
     - name: Install dependencies
       run: |
-        cd src/backend
+        cd src/ocr-engine
         poetry install --with dev
 
     - name: Start OCR API server for E2E tests
       run: |
-        cd src/backend
+        cd src/ocr-engine
         # Start the server in the background
         poetry run uvicorn fast_api_server:app --host 0.0.0.0 --port 8000 &
         SERVER_PID=$!
@@ -344,14 +344,14 @@ jobs:
 
     - name: Run End-to-End OCR Tests
       run: |
-        cd src/backend
+        cd src/ocr-engine
         # Run E2E tests that validate the full OCR pipeline with real sample files
         poetry run pytest tests/test_e2e_ocr.py -v
 
     - name: Stop OCR API server
       if: always()
       run: |
-        cd src/backend
+        cd src/ocr-engine
         if [ -f server.pid ]; then
           SERVER_PID=$(cat server.pid)
           kill $SERVER_PID || true
@@ -386,12 +386,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cd src/backend
+        cd src/ocr-engine
         poetry install
 
     - name: Run integration tests with sample files
       run: |
-        cd src/backend
+        cd src/ocr-engine
         # Start the server in the background
         poetry run uvicorn fast_api_server:app --host 0.0.0.0 --port 8000 &
         SERVER_PID=$!

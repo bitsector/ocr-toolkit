@@ -73,7 +73,7 @@ The CI/CD pipeline is defined in `.github/workflows/ci-cd.yml` and consists of 6
 Run the same checks locally:
 
 ```bash
-cd src/backend
+cd src/ocr-engine
 
 # Format code
 poetry run black .
