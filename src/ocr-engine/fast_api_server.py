@@ -7,7 +7,10 @@ def create_app() -> FastAPI:
         title="OCR Toolkit API",
         description="API for optical character recognition operations including text extraction and language detection",
         version="1.0.0",
-        contact={"name": "OCR Toolkit", "email": "support@ocr-toolkit.com"},
+        contact={
+            "name": "OCR Toolkit",
+            "email": "non-existent-support@ocr-toolkit.com",
+        },
         license_info={"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
     )
 

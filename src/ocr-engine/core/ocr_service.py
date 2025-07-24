@@ -16,6 +16,7 @@ from PIL import Image
 from PIL.Image import Image as PILImage
 
 from util.config import get_cached_config
+from util.file_validation import validate_file_contents
 from util.logger import get_service_logger
 
 # Initialize logger for this service
@@ -268,6 +269,9 @@ class OCRService:
                 ".pdf": "application/pdf",
             }
             content_type = content_type_map.get(ext, content_type)
+
+        # Validate file contents for security before processing
+        validate_file_contents(file_content, file.filename, content_type)
 
         # Process based on content type
         if content_type == "application/pdf":
