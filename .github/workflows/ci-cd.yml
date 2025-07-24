@@ -52,6 +52,11 @@ jobs:
         cd src/ocr-engine
         poetry run isort --check-only --diff . --profile black
 
+    - name: Check for unused and non-top-level imports
+      run: |
+        cd src/ocr-engine
+        poetry run flake8 --select=F401,E402 --statistics .
+
   static-check:
     runs-on: ubuntu-latest
     steps:
