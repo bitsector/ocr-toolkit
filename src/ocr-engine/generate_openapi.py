@@ -10,6 +10,11 @@ import json
 import sys
 from pathlib import Path
 
+from util.logger import get_cli_logger
+
+# Initialize CLI logger for this script
+logger = get_cli_logger(__name__)
+
 
 def main():
     """Generate OpenAPI documentation in JSON and YAML formats"""
@@ -17,8 +22,8 @@ def main():
     # Check if --no-server flag is passed
     start_server = "--no-server" not in sys.argv
 
-    print("📚 OpenAPI Documentation Generator")
-    print("==================================")
+    logger.info("📚 OpenAPI Documentation Generator")
+    logger.info("==================================")
 
     try:
         # Import dependencies
@@ -27,12 +32,12 @@ def main():
 
             from fast_api_server import app
         except ImportError as e:
-            print(f"❌ Error importing dependencies: {e}")
-            print("Make sure to run: poetry install")
+            logger.error(f"❌ Error importing dependencies: {e}")
+            logger.info("Make sure to run: poetry install")
             return False
 
         # Get the OpenAPI schema from FastAPI
-        print("🔄 Extracting OpenAPI schema from FastAPI application...")
+        logger.info("🔄 Extracting OpenAPI schema from FastAPI application...")
         openapi_schema = app.openapi()
 
         # Create openapi directory if it doesn't exist
@@ -41,13 +46,13 @@ def main():
 
         # Generate JSON file
         json_file = openapi_dir / "openapi.json"
-        print(f"📄 Generating {json_file}...")
+        logger.info(f"📄 Generating {json_file}...")
         with open(json_file, "w", encoding="utf-8") as f:
             json.dump(openapi_schema, f, indent=2, default=str, ensure_ascii=False)
 
         # Generate YAML file
         yaml_file = openapi_dir / "openapi.yaml"
-        print(f"📄 Generating {yaml_file}...")
+        logger.info(f"📄 Generating {yaml_file}...")
         with open(yaml_file, "w", encoding="utf-8") as f:
             yaml.dump(
                 openapi_schema,
@@ -58,33 +63,33 @@ def main():
                 allow_unicode=True,
             )
 
-        print("✅ OpenAPI documentation generated successfully!")
-        print("")
-        print("Generated files:")
-        print(f"  📄 {json_file} - OpenAPI specification in JSON format")
-        print(f"  📄 {yaml_file} - OpenAPI specification in YAML format")
-        print("")
-        print("To view the documentation:")
-        print(
+        logger.info("✅ OpenAPI documentation generated successfully!")
+        logger.info("")
+        logger.info("Generated files:")
+        logger.info(f"  📄 {json_file} - OpenAPI specification in JSON format")
+        logger.info(f"  📄 {yaml_file} - OpenAPI specification in YAML format")
+        logger.info("")
+        logger.info("To view the documentation:")
+        logger.info(
             "  1. Start the server: poetry run uvicorn fast_api_server:app --reload --host 0.0.0.0 --port 8000"
         )
-        print("  2. Visit: http://localhost:8000/docs (Swagger UI)")
-        print("  3. Visit: http://localhost:8000/redoc (ReDoc)")
-        print("  4. API JSON: http://localhost:8000/openapi.json")
-        print("")
+        logger.info("  2. Visit: http://localhost:8000/docs (Swagger UI)")
+        logger.info("  3. Visit: http://localhost:8000/redoc (ReDoc)")
+        logger.info("  4. API JSON: http://localhost:8000/openapi.json")
+        logger.info("")
 
         # Display some stats
-        print("API Summary:")
-        print(f"  📊 Title: {openapi_schema.get('info', {}).get('title', 'N/A')}")
-        print(f"  📊 Version: {openapi_schema.get('info', {}).get('version', 'N/A')}")
-        print(f"  📊 Endpoints: {len(openapi_schema.get('paths', {}))}")
-        print(
+        logger.info("API Summary:")
+        logger.info(f"  📊 Title: {openapi_schema.get('info', {}).get('title', 'N/A')}")
+        logger.info(f"  📊 Version: {openapi_schema.get('info', {}).get('version', 'N/A')}")
+        logger.info(f"  📊 Endpoints: {len(openapi_schema.get('paths', {}))}")
+        logger.info(
             f"  📊 Models: {len(openapi_schema.get('components', {}).get('schemas', {}))}"
         )
 
         # Conditionally start the server
         if start_server:
-            print("\n🚀 Starting FastAPI server automatically...")
+            logger.info("\n🚀 Starting FastAPI server automatically...")
             try:
                 import subprocess
 
@@ -102,20 +107,20 @@ def main():
                     ]
                 )
             except KeyboardInterrupt:
-                print("\n👋 Server stopped. Goodbye!")
+                logger.info("\n👋 Server stopped. Goodbye!")
             except Exception as e:
-                print(f"\n❌ Error starting server: {e}")
+                logger.error(f"\n❌ Error starting server: {e}")
         else:
-            print("\n✨ OpenAPI documentation generated successfully!")
-            print("💡 Tip: Start the server manually with:")
-            print(
+            logger.info("\n✨ OpenAPI documentation generated successfully!")
+            logger.info("💡 Tip: Start the server manually with:")
+            logger.info(
                 "   poetry run uvicorn fast_api_server:app --reload --host 0.0.0.0 --port 8000"
             )
 
         return True
 
     except Exception as e:
-        print(f"❌ Error generating OpenAPI documentation: {e}")
+        logger.error(f"❌ Error generating OpenAPI documentation: {e}")
         return False
 
 

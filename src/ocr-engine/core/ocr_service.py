@@ -14,6 +14,11 @@ from langdetect.lang_detect_exception import LangDetectException
 from PIL import Image
 from PIL.Image import Image as PILImage
 
+from util.logger import get_service_logger
+
+# Initialize logger for this service
+logger = get_service_logger(__name__)
+
 # Language code mappings for better readability
 LANGUAGE_NAMES = {
     "en": "English",
@@ -136,19 +141,19 @@ class OCRService:
         try:
             # Open image with PIL
             image: PILImage = Image.open(io.BytesIO(image_bytes))
-            print(
-                f"DEBUG: Processing image {filename} with size {image.size}, mode: {image.mode}"
+            logger.debug(
+                f"Processing image {filename} with size {image.size}, mode: {image.mode}"
             )
 
             # Convert to RGB if necessary (for WEBP and other formats)
             if image.mode != "RGB":
                 image = image.convert("RGB")
-                print(f"DEBUG: Converted image to RGB mode")
+                logger.debug(f"Converted image to RGB mode")
 
             # Simple OCR extraction - matching Tesseract.js approach
             # Use default Tesseract settings, no custom PSM or OEM
             extracted_text = pytesseract.image_to_string(image).strip()
-            print(f"DEBUG: OCR result for {filename}: '{extracted_text}'")
+            logger.debug(f"OCR result for {filename}: '{extracted_text}'")
 
             # Set confidence based on whether text was found
             confidence_score = 0.85 if extracted_text else 0.0
@@ -156,7 +161,7 @@ class OCRService:
             return extracted_text, confidence_score
 
         except Exception as e:
-            print(f"DEBUG: OCR failed for {filename}: {str(e)}")
+            logger.error(f"OCR failed for {filename}: {str(e)}")
             raise HTTPException(
                 status_code=422, detail=f"Failed to process image {filename}: {str(e)}"
             )

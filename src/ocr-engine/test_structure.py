@@ -4,25 +4,30 @@ Test script to verify the new controller/core structure works correctly.
 This can be run to validate imports and basic functionality.
 """
 
+from util.logger import get_cli_logger
+
+# Initialize logger for this test script
+logger = get_cli_logger(__name__)
+
 
 def test_imports():
     """Test that all our refactored imports work correctly"""
-    print("Testing imports...")
+    logger.info("Testing imports...")
 
     # Test core layer imports
     try:
         from core import FileValidationService, LanguageDetectionService, OCRService
 
-        print("✅ Core layer imports successful")
+        logger.info("✅ Core layer imports successful")
     except ImportError as e:
-        print(f"❌ Core layer import failed: {e}")
+        logger.error(f"❌ Core layer import failed: {e}")
         return False
 
     # Test controller layer imports
     try:
         from controllers import HealthController, OCRController
 
-        print("✅ Controllers layer imports successful")
+        logger.info("✅ Controllers layer imports successful")
     except ImportError as e:
         print(f"❌ Controllers layer import failed: {e}")
         return False
