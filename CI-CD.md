@@ -38,7 +38,7 @@ The CI/CD pipeline is defined in `.github/workflows/ci-cd.yml` and consists of 6
 
 ## Python Version
 
-- **Target Version**: Python 3.13
+- **Target Version**: Python 3.10
 - All jobs use the same Python version for consistency
 - Removed matrix testing to focus on single version
 
@@ -98,7 +98,7 @@ The pipeline runs on:
 
 ## Matrix Testing
 
-- **Single Version**: Python 3.13 only
+- **Single Version**: Python 3.10 only
 - **Platform**: Ubuntu latest
 - **Reasoning**: Simplified for consistency and faster builds
 
