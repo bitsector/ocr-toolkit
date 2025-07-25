@@ -1,3 +1,11 @@
+import os
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Union
+
+from util.logger import get_service_logger
+
+
 # Utility function to get a config value from environment, .env, or default
 def get_config_value(key: str, default: str = None) -> str:
     """
@@ -31,13 +39,6 @@ Usage:
     max_file_size = config.max_file_size
     ocr_confidence = config.ocr_confidence_score
 """
-
-import os
-from dataclasses import dataclass
-from pathlib import Path
-from typing import List, Union
-
-from util.logger import get_service_logger
 
 logger = get_service_logger(__name__)
 
