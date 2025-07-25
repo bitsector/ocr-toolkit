@@ -160,8 +160,10 @@ class OCRService:
             cropping = None
             if cropping_str:
                 try:
-                    cropping = tuple(map(int, cropping_str.split(",")))
-                    if len(cropping) != 4:
+                    parts = tuple(map(int, cropping_str.split(",")))
+                    if len(parts) == 4:
+                        cropping = (parts[0], parts[1], parts[2], parts[3])
+                    else:
                         cropping = None
                 except Exception:
                     cropping = None
