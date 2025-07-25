@@ -35,7 +35,7 @@ def image_preparation(
 
     # Get processing size limit from config/env
     try:
-        size_limit = int(get_config_value("IMAGE_SIZE_PROCESSING_LIMIT", 41943040))
+        size_limit = int(get_config_value("IMAGE_SIZE_PROCESSING_LIMIT", "41943040"))
     except Exception:
         size_limit = 41943040  # fallback 40MB
 

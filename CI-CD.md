@@ -70,18 +70,20 @@ The CI/CD pipeline is defined in `.github/workflows/ci-cd.yml` and consists of 6
 
 ## Local Development
 
-Run the same checks locally:
+
+## Local Linting Command (CI/CD Equivalent)
+
+To run the exact linting checks as the CI/CD pipeline, use this command from your home directory:
 
 ```bash
-cd src/ocr-engine
+cd ~/playground/python_playground/ocr-toolkit/src/ocr-engine && poetry run black --check --diff . && poetry run isort --check-only --diff . --profile black && poetry run flake8 --select=F401,E402 --exclude=.venv,venv,env,.env,__pycache__,.pytest_cache,.git --statistics .
+```
 
-# Format code
-poetry run black .
-poetry run isort . --profile black
+This command is the local equivalent of the CI/CD linter stage and will ensure your code passes all formatting and import checks before pushing or opening a pull request.
 
-# Run checks (same as CI)
-poetry run black --check --diff .
-poetry run isort --check-only --diff . --profile black  
+Other checks (type checking, security, tests, etc.) can be run as described below:
+
+```bash
 poetry run mypy . --config-file mypy.ini
 poetry run bandit -r . -c .bandit -ll
 poetry run pytest -v
